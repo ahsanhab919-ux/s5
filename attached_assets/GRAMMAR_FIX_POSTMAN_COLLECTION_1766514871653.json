@@ -1,0 +1,286 @@
+{
+  "info": {
+    "_postman_id": "grammar-fix-collection-shothik-v3",
+    "name": "Shothik AI - Grammar Fix APIs",
+    "description": "Complete API collection for Grammar Fix product/service in Shothik AI v3.\n\nThe Grammar Fix helps identify and correct grammar, spelling, and punctuation errors in text content.\n\n**Base URL:** https://api-qa.shothik.ai\n\n**Total APIs:** 5 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "section_id",
+      "value": "section_123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Core Grammar API",
+      "description": "Main API for grammar checking",
+      "item": [
+        {
+          "name": "1. Grammar Check (English US)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"This sentence have many mistake that needs to be fix. Their going to the store tommorrow. I seen him yesterday at the park.\",\n  \"language\": \"English (US)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grammar/check",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grammar", "check"]
+            },
+            "description": "Check text for grammar, spelling, and punctuation errors.\n\n**Issue Types:**\n- `grammar`: Grammar errors\n- `spelling`: Spelling mistakes\n- `punctuation`: Punctuation errors\n- `style`: Style recommendations"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"score\": 65,\n    \"issues\": [\n      {\n        \"id\": \"issue_1\",\n        \"error\": \"have\",\n        \"correct\": \"has\",\n        \"sentence\": \"This sentence have many mistake that needs to be fix.\",\n        \"context\": \"sentence have many\",\n        \"type\": \"grammar\",\n        \"explanation\": \"Use 'has' with singular subjects like 'sentence'.\"\n      },\n      {\n        \"id\": \"issue_2\",\n        \"error\": \"mistake\",\n        \"correct\": \"mistakes\",\n        \"sentence\": \"This sentence have many mistake that needs to be fix.\",\n        \"context\": \"many mistake that\",\n        \"type\": \"grammar\",\n        \"explanation\": \"Use plural 'mistakes' after 'many'.\"\n      },\n      {\n        \"id\": \"issue_3\",\n        \"error\": \"Their\",\n        \"correct\": \"They're\",\n        \"sentence\": \"Their going to the store tommorrow.\",\n        \"context\": \"Their going to\",\n        \"type\": \"spelling\",\n        \"explanation\": \"'They're' is the contraction of 'they are'.\"\n      },\n      {\n        \"id\": \"issue_4\",\n        \"error\": \"tommorrow\",\n        \"correct\": \"tomorrow\",\n        \"sentence\": \"Their going to the store tommorrow.\",\n        \"context\": \"store tommorrow\",\n        \"type\": \"spelling\",\n        \"explanation\": \"Correct spelling is 'tomorrow'.\"\n      },\n      {\n        \"id\": \"issue_5\",\n        \"error\": \"seen\",\n        \"correct\": \"saw\",\n        \"sentence\": \"I seen him yesterday at the park.\",\n        \"context\": \"I seen him\",\n        \"type\": \"grammar\",\n        \"explanation\": \"Use 'saw' (past tense) instead of 'seen' (past participle).\"\n      }\n    ],\n    \"recommendations\": [],\n    \"summary\": {\n      \"totalIssues\": 5,\n      \"grammarIssues\": 3,\n      \"spellingIssues\": 2,\n      \"punctuationIssues\": 0\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "1b. Grammar Check (English UK)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"The colour of the car is grey. I favour this behaviour.\",\n  \"language\": \"English (UK)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grammar/check",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grammar", "check"]
+            },
+            "description": "Check text for grammar errors using British English spelling conventions."
+          },
+          "response": []
+        },
+        {
+          "name": "1c. Grammar Check (Long Text)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"The importance of good grammar cannot be understated in professional communication. When we writes clearly, our message is more likely to be understood. Many people struggles with common grammatical errors such as subject-verb agreement and pronoun usage.\\n\\nIn todays fast-paced world, clear communication has became more important then ever. Weather your writing an email, a report, or a social media post, proper grammar helps establish credibility. Their are many tools available to help improve your writing skills.\\n\\nRemember that practice make perfect. The more you write, the better you will become at spotting and correcting errors in your own work.\",\n  \"language\": \"English (US)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grammar/check",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grammar", "check"]
+            },
+            "description": "Check a longer multi-paragraph text for comprehensive grammar analysis."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Section Management",
+      "description": "APIs for managing grammar check sections/history",
+      "item": [
+        {
+          "name": "2. Get Grammar Sections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/grammar/sections?page=1&limit=10&search=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grammar", "sections"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (default: 10)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search filter (optional)"
+                }
+              ]
+            },
+            "description": "Fetch paginated list of grammar check sections/sessions."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"sections\": [\n      {\n        \"id\": \"section_123\",\n        \"title\": \"Document Review 1\",\n        \"text\": \"Original text that was checked...\",\n        \"score\": 85,\n        \"issuesCount\": 5,\n        \"timestamp\": \"2025-12-09T10:30:00Z\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 25,\n      \"totalPages\": 3\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Single Grammar Section",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/grammar/section/{{section_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grammar", "section", "{{section_id}}"]
+            },
+            "description": "Retrieve details of a specific grammar check section by ID."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"section_123\",\n    \"title\": \"Document Review 1\",\n    \"text\": \"Original text that was checked for grammar errors...\",\n    \"language\": \"English (US)\",\n    \"score\": 85,\n    \"issues\": [\n      {\n        \"id\": \"issue_1\",\n        \"error\": \"their\",\n        \"correct\": \"they're\",\n        \"sentence\": \"Their going to the store.\",\n        \"type\": \"grammar\"\n      }\n    ],\n    \"recommendations\": [],\n    \"timestamp\": \"2025-12-09T10:30:00Z\",\n    \"updatedAt\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Rename Grammar Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Document Review\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grammar/section-rename/{{section_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grammar", "section-rename", "{{section_id}}"]
+            },
+            "description": "Update the title/name of a grammar check section."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Section renamed successfully\",\n  \"data\": {\n    \"id\": \"section_123\",\n    \"title\": \"Updated Document Review\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Delete Grammar Section",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/grammar/section-delete/{{section_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grammar", "section-delete", "{{section_id}}"]
+            },
+            "description": "Remove a grammar check section from history."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Section deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// You can add common logic here"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "pm.test('Response has success field', function () {",
+          "    var jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('success');",
+          "});"
+        ]
+      }
+    }
+  ]
+}
+

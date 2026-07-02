@@ -1,0 +1,605 @@
+{
+  "info": {
+    "_postman_id": "ai-detector-collection-shothik-v3",
+    "name": "Shothik AI - AI Detector APIs",
+    "description": "Complete API collection for AI Detector product/service in Shothik AI v3.\n\nThe AI Detector helps identify AI-generated content and provides detailed sentence-level analysis.\n\n**Base URL:** https://api-qa.shothik.ai\n\n**Total APIs:** 15 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "section_id",
+      "value": "section_123",
+      "type": "string"
+    },
+    {
+      "key": "history_id",
+      "value": "history_456",
+      "type": "string"
+    },
+    {
+      "key": "share_id",
+      "value": "share_789",
+      "type": "string"
+    },
+    {
+      "key": "share_link_id",
+      "value": "public_share_456",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Core AI Detection",
+      "description": "Core APIs for AI content detection and analysis",
+      "item": [
+        {
+          "name": "1. AI Detector Check (Scan Content)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"This is sample text to check for AI generation. The text should be long enough to provide meaningful analysis. AI-generated content often has certain patterns that can be detected through sophisticated algorithms.\",\n  \"settings\": {\n    \"sensitivity\": \"medium\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/check",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "check"]
+            },
+            "description": "Analyze text content to detect AI-generated sentences.\n\n**Response includes:**\n- Overall AI score\n- AI/Human probability percentages\n- Sentence-level analysis with confidence scores"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"overallScore\": 0.75,\n    \"aiProbability\": 75,\n    \"humanProbability\": 25,\n    \"sentences\": [\n      {\n        \"text\": \"This is sample text to check for AI generation.\",\n        \"aiScore\": 0.8,\n        \"classification\": \"AI\",\n        \"confidence\": \"high\"\n      }\n    ],\n    \"summary\": {\n      \"totalSentences\": 2,\n      \"aiSentences\": 1,\n      \"humanSentences\": 1\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Section Management",
+      "description": "APIs for managing AI detection sections/sessions",
+      "item": [
+        {
+          "name": "2. Get AI Detector Sections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sections?page=1&limit=10&search=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "sections"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (default: 10)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search filter (optional)"
+                }
+              ]
+            },
+            "description": "Fetch paginated list of AI detection sections/sessions."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"sections\": [\n      {\n        \"id\": \"section_123\",\n        \"title\": \"Document Analysis 1\",\n        \"createdAt\": \"2025-12-09T10:30:00Z\",\n        \"aiScore\": 0.65,\n        \"wordCount\": 500\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 25,\n      \"totalPages\": 3\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Single AI Detector Section",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/section/{{section_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "section", "{{section_id}}"]
+            },
+            "description": "Retrieve details of a specific AI detection section by ID."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"section_123\",\n    \"title\": \"Document Analysis 1\",\n    \"text\": \"Original analyzed text...\",\n    \"results\": {\n      \"overallScore\": 0.65,\n      \"sentences\": []\n    },\n    \"createdAt\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Rename AI Detector Section",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Document Analysis\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/section-rename/{{section_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "section-rename", "{{section_id}}"]
+            },
+            "description": "Update the title/name of an AI detection section."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Section renamed successfully\",\n  \"data\": {\n    \"id\": \"section_123\",\n    \"title\": \"Updated Document Analysis\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Delete AI Detector Section",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/section-delete/{{section_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "section-delete", "{{section_id}}"]
+            },
+            "description": "Remove an AI detection section from history."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Section deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "History Management",
+      "description": "APIs for managing AI detection history entries",
+      "item": [
+        {
+          "name": "6. Get AI Detector Histories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/histories?page=1&limit=10&search=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "histories"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (default: 10)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search filter (optional)"
+                }
+              ]
+            },
+            "description": "Fetch paginated list of AI detector analysis histories."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"histories\": [\n      {\n        \"id\": \"history_456\",\n        \"sectionId\": \"section_123\",\n        \"text\": \"Analyzed text...\",\n        \"aiScore\": 0.75,\n        \"createdAt\": \"2025-12-09T10:30:00Z\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 50,\n      \"totalPages\": 5\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "7. Get Single AI Detector History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/history/{{history_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "history", "{{history_id}}"]
+            },
+            "description": "Retrieve details of a specific AI detection history entry."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"history_456\",\n    \"text\": \"Original text that was analyzed...\",\n    \"results\": {\n      \"overallScore\": 0.75,\n      \"aiProbability\": 75,\n      \"humanProbability\": 25,\n      \"sentences\": []\n    },\n    \"createdAt\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "8. Get Shared AI Detector Content (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/share/{{share_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "share", "{{share_id}}"]
+            },
+            "description": "Access publicly shared AI detection results.\n\n**Note:** No authentication required for public shares."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"share_789\",\n    \"text\": \"Shared analyzed text...\",\n    \"results\": {\n      \"overallScore\": 0.65,\n      \"sentences\": []\n    },\n    \"sharedAt\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "9. Save Shared AI Detector History",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shareId\": \"{{share_id}}\",\n  \"title\": \"Saved Analysis from Share\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/save-shared",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-detector", "save-shared"]
+            },
+            "description": "Save a shared AI detection result to your own account."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Shared content saved successfully\",\n  \"data\": {\n    \"id\": \"history_new_123\",\n    \"title\": \"Saved Analysis from Share\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Share Management",
+      "description": "APIs for sharing AI detection results (private/public)",
+      "item": [
+        {
+          "name": "10. Create Private Share (Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"historyId\": \"{{history_id}}\",\n  \"emails\": [\"colleague@example.com\"],\n  \"message\": \"Please review this AI detection analysis\",\n  \"settings\": {\n    \"allowDownload\": true,\n    \"expiresIn\": \"7d\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/private",
+              "host": ["{{base_url}}"],
+              "path": ["api", "share-ai-detector", "private"]
+            },
+            "description": "Share AI detection results privately via email."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Private share created and emails sent\",\n  \"data\": {\n    \"shareId\": \"private_share_123\",\n    \"sentTo\": [\"colleague@example.com\"],\n    \"expiresAt\": \"2025-12-16T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "11. Create Public Share Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"historyId\": \"{{history_id}}\",\n  \"message\": \"Public AI Detection Report\",\n  \"settings\": {\n    \"password\": \"secure123\",\n    \"allowDownload\": true,\n    \"expiresIn\": \"30d\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/public",
+              "host": ["{{base_url}}"],
+              "path": ["api", "share-ai-detector", "public"]
+            },
+            "description": "Generate a public shareable link for AI detection results.\n\n**Optional settings:**\n- password: Password protect the share\n- allowDownload: Allow downloading results\n- expiresIn: Expiration time (e.g., '7d', '30d')"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"shareId\": \"public_share_456\",\n    \"shareLink\": \"https://shothik.ai/share/ai-detector/public_share_456\",\n    \"hasPassword\": true,\n    \"expiresAt\": \"2026-01-08T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "12. Verify Shared AI Detector (No Password)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/verify/{{share_link_id}}",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "share-ai-detector",
+                "verify",
+                "{{share_link_id}}"
+              ]
+            },
+            "description": "Verify and access shared AI detection content without password.\n\n**Note:** No authentication required."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"shareId\": \"public_share_456\",\n    \"historyId\": \"history_456\",\n    \"content\": {\n      \"text\": \"Analyzed text...\",\n      \"results\": {\n        \"overallScore\": 0.75,\n        \"sentences\": []\n      }\n    },\n    \"message\": \"AI Detection Results\",\n    \"sharedBy\": \"user@example.com\",\n    \"sharedAt\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "12b. Verify Shared AI Detector (With Password)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/verify/{{share_link_id}}?password=secure123",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "share-ai-detector",
+                "verify",
+                "{{share_link_id}}"
+              ],
+              "query": [
+                {
+                  "key": "password",
+                  "value": "secure123",
+                  "description": "Password for protected shares"
+                }
+              ]
+            },
+            "description": "Verify and access password-protected shared AI detection content.\n\n**Note:** No authentication required, but password is needed."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"shareId\": \"public_share_456\",\n    \"historyId\": \"history_456\",\n    \"content\": {\n      \"text\": \"Analyzed text...\",\n      \"results\": {\n        \"overallScore\": 0.75,\n        \"sentences\": []\n      }\n    },\n    \"message\": \"AI Detection Results\",\n    \"sharedBy\": \"user@example.com\",\n    \"sharedAt\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "13. Get Share Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/{{share_link_id}}",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "share-ai-detector",
+                "analytics",
+                "{{share_link_id}}"
+              ]
+            },
+            "description": "Retrieve analytics for a shared AI detection link including views, unique visitors, and access history."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"shareId\": \"public_share_456\",\n    \"views\": 45,\n    \"uniqueVisitors\": 23,\n    \"lastAccessedAt\": \"2025-12-09T15:20:00Z\",\n    \"viewsByDate\": [\n      {\n        \"date\": \"2025-12-09\",\n        \"views\": 12\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "14. Update Share Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allowDownload\": false,\n  \"password\": \"newPassword123\",\n  \"expiresIn\": \"14d\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{share_link_id}}/settings",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "share-ai-detector",
+                "{{share_link_id}}",
+                "settings"
+              ]
+            },
+            "description": "Update settings for an existing share.\n\n**Available settings:**\n- allowDownload: Enable/disable download\n- password: Set or change password\n- expiresIn: Update expiration time"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Share settings updated successfully\",\n  \"data\": {\n    \"shareId\": \"public_share_456\",\n    \"settings\": {\n      \"allowDownload\": false,\n      \"hasPassword\": true,\n      \"expiresAt\": \"2025-12-23T10:30:00Z\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "15. Deactivate Share",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{share_link_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "share-ai-detector", "{{share_link_id}}"]
+            },
+            "description": "Deactivate/delete a share link. The shared content will no longer be accessible."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Share deactivated successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// You can add common logic here"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "pm.test('Response has success field', function () {",
+          "    var jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('success');",
+          "});"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,627 @@
+{
+  "info": {
+    "_postman_id": "sheet-collection-shothik-v3",
+    "name": "Shothik AI - Sheet APIs",
+    "description": "Complete API collection for Sheet product/service in Shothik AI v3.\n\nThe Sheet service provides AI-powered spreadsheet generation with real-time streaming, chat management, conversation history, and sharing capabilities.\n\n**Base URLs:**\n- Sheet API: https://api-qa.shothik.ai/sheet\n- API with Prefix: https://api-qa.shothik.ai/api\n\n**Total APIs:** 18 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "sheet_url",
+      "value": "https://api-qa.shothik.ai/sheet",
+      "type": "string"
+    },
+    {
+      "key": "api_url",
+      "value": "https://api-qa.shothik.ai/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "sheet_token",
+      "value": "YOUR_SHEET_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "chat_id",
+      "value": "YOUR_CHAT_ID",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "YOUR_CONVERSATION_ID",
+      "type": "string"
+    },
+    {
+      "key": "share_id",
+      "value": "YOUR_SHARE_ID",
+      "type": "string"
+    },
+    {
+      "key": "user_email",
+      "value": "YOUR_EMAIL",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Chat Management",
+      "description": "APIs for managing sheet chat sessions",
+      "item": [
+        {
+          "name": "1. Create Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sales Data Analysis\",\n  \"userEmail\": \"{{user_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{sheet_url}}/chat/create_chat",
+              "host": ["{{sheet_url}}"],
+              "path": ["chat", "create_chat"]
+            },
+            "description": "Create a new chat session for sheet generation."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"_id\": \"chat_123456789\",\n    \"name\": \"Sales Data Analysis\",\n    \"userId\": \"user123\",\n    \"createdAt\": \"2025-12-09T10:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Get User's Chats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{sheet_url}}/chat/get_my_chats",
+              "host": ["{{sheet_url}}"],
+              "path": ["chat", "get_my_chats"]
+            },
+            "description": "Retrieve all chat sessions for the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Create Chat (Alternative)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "X-SheetAi-Token",
+                "value": "{{sheet_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budget Planning Sheet\",\n  \"userEmail\": \"{{user_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/sheet/chat/create",
+              "host": ["{{api_url}}"],
+              "path": ["sheet", "chat", "create"]
+            },
+            "description": "Alternative endpoint to create a new chat."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Conversation APIs",
+      "description": "APIs for managing conversations within chats",
+      "item": [
+        {
+          "name": "4. Create Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "X-SheetAi-Token",
+                "value": "{{sheet_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chatId\": \"{{chat_id}}\",\n  \"prompt\": \"Create a sales report for Q4 2025 with monthly breakdown\"\n}"
+            },
+            "url": {
+              "raw": "{{sheet_url}}/conversation/create_conversation",
+              "host": ["{{sheet_url}}"],
+              "path": ["conversation", "create_conversation"]
+            },
+            "description": "Create a new conversation/query within a chat."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Create Conversation Stream (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              },
+              {
+                "key": "Cache-Control",
+                "value": "no-cache"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chatId\": \"{{chat_id}}\",\n  \"prompt\": \"Generate a budget spreadsheet for a marketing campaign\",\n  \"userEmail\": \"{{user_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/sheet/conversation/create-stream",
+              "host": ["{{api_url}}"],
+              "path": ["sheet", "conversation", "create-stream"]
+            },
+            "description": "Create a conversation with real-time streaming updates.\n\n**⚠️ SSE STREAMING ENDPOINT:** Postman may not handle this correctly. Use curl:\n```\ncurl -X POST 'https://api-qa.shothik.ai/api/sheet/conversation/create-stream' \\\n  -H 'Content-Type: application/json' \\\n  -H 'Authorization: Bearer YOUR_TOKEN' \\\n  -H 'Accept: text/event-stream' \\\n  --data-raw '{...}' --no-buffer\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{sheet_url}}/conversation/get_chat_conversations/{{chat_id}}",
+              "host": ["{{sheet_url}}"],
+              "path": ["conversation", "get_chat_conversations", "{{chat_id}}"]
+            },
+            "description": "Get all conversations in a chat session."
+          },
+          "response": []
+        },
+        {
+          "name": "7. Save Edited Sheet Data",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"columns\": [\"Month\", \"Sales\", \"Revenue\", \"Growth\"],\n  \"rows\": [\n    {\"Month\": \"October\", \"Sales\": 150, \"Revenue\": 15000, \"Growth\": \"10%\"},\n    {\"Month\": \"November\", \"Sales\": 200, \"Revenue\": 20000, \"Growth\": \"15%\"}\n  ],\n  \"metadata\": {\n    \"chatId\": \"{{chat_id}}\",\n    \"lastEdited\": \"2025-12-09T12:00:00.000Z\",\n    \"editType\": \"cell_edit\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{sheet_url}}/conversation/update_conversation/{{conversation_id}}",
+              "host": ["{{sheet_url}}"],
+              "path": ["conversation", "update_conversation", "{{conversation_id}}"]
+            },
+            "description": "Save changes made to sheet data."
+          },
+          "response": []
+        },
+        {
+          "name": "8. Stop Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/sheet/conversation/stop/{{conversation_id}}",
+              "host": ["{{api_url}}"],
+              "path": ["sheet", "conversation", "stop", "{{conversation_id}}"]
+            },
+            "description": "Stop an ongoing conversation/generation."
+          },
+          "response": []
+        },
+        {
+          "name": "9. Simulate Conversation (Demo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chatId\": \"simulation_demo_123\",\n  \"prompt\": \"Generate sample inventory data\"\n}"
+            },
+            "url": {
+              "raw": "{{sheet_url}}/conversation/simulate_conversation",
+              "host": ["{{sheet_url}}"],
+              "path": ["conversation", "simulate_conversation"]
+            },
+            "description": "Run a simulation conversation for demo purposes."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Service APIs",
+      "description": "Service registration and health check APIs",
+      "item": [
+        {
+          "name": "10. Register Sheet Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/sheet/register-sheet-service",
+              "host": ["{{api_url}}"],
+              "path": ["sheet", "register-sheet-service"]
+            },
+            "description": "Register for the sheet service and receive a service token."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"token\": \"sheetai_token_xyz123...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "11. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/sheet/health",
+              "host": ["{{api_url}}"],
+              "path": ["sheet", "health"]
+            },
+            "description": "Check the health status of the sheet service."
+          },
+          "response": []
+        },
+        {
+          "name": "12. Replicate Shared Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shareId\": \"{{share_id}}\",\n  \"newName\": \"My Copy of Sales Report\"\n}"
+            },
+            "url": {
+              "raw": "{{sheet_url}}/chat/replicate_chat",
+              "host": ["{{sheet_url}}"],
+              "path": ["chat", "replicate_chat"]
+            },
+            "description": "Create a copy of a shared chat in user's own account."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Share APIs",
+      "description": "APIs for sharing sheets",
+      "item": [
+        {
+          "name": "13. Share Sheet (Private/Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agentId\": \"sheet_123\",\n  \"emails\": [\"colleague@example.com\"],\n  \"message\": \"Check out this sales analysis\",\n  \"content\": {\n    \"type\": \"sheet\",\n    \"data\": [\n      {\"Month\": \"October\", \"Sales\": 150, \"Revenue\": 15000}\n    ],\n    \"metadata\": {\n      \"title\": \"Sales Analysis Q4\",\n      \"description\": \"Quarterly sales breakdown\",\n      \"chatId\": \"{{chat_id}}\"\n    }\n  },\n  \"settings\": {\n    \"requireSignIn\": false,\n    \"allowCopy\": true,\n    \"allowExport\": true,\n    \"trackViews\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/share-agent/private",
+              "host": ["{{api_url}}"],
+              "path": ["share-agent", "private"]
+            },
+            "description": "Share a sheet privately via email."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"shareId\": \"share_abc123\",\n    \"emailsSent\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "14. Share Sheet (Public Link)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agentId\": \"sheet_123\",\n  \"message\": \"Public sales report\",\n  \"content\": {\n    \"type\": \"sheet\",\n    \"data\": [\n      {\"Month\": \"October\", \"Sales\": 150, \"Revenue\": 15000}\n    ],\n    \"metadata\": {\n      \"title\": \"Sales Report Q4\",\n      \"chatId\": \"{{chat_id}}\"\n    }\n  },\n  \"settings\": {\n    \"allowCopy\": true,\n    \"allowExport\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/share-agent/public",
+              "host": ["{{api_url}}"],
+              "path": ["share-agent", "public"]
+            },
+            "description": "Create a public shareable link for a sheet."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"shareId\": \"share_xyz789\",\n    \"shareLink\": \"https://shothik.ai/agents/shared-sheet/share_xyz789\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "15. Verify Shared Sheet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/share-agent/verify/{{share_id}}",
+              "host": ["{{api_url}}"],
+              "path": ["share-agent", "verify", "{{share_id}}"],
+              "query": [
+                {
+                  "key": "password",
+                  "value": "",
+                  "description": "Optional password if protected",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Verify and access a shared sheet."
+          },
+          "response": []
+        },
+        {
+          "name": "16. Get Share Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/share-agent/analytics/sheet_123",
+              "host": ["{{api_url}}"],
+              "path": ["share-agent", "analytics", "sheet_123"]
+            },
+            "description": "Get analytics for a shared sheet."
+          },
+          "response": []
+        },
+        {
+          "name": "17. Deactivate Share",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/share-agent/{{share_id}}",
+              "host": ["{{api_url}}"],
+              "path": ["share-agent", "{{share_id}}"]
+            },
+            "description": "Deactivate/delete a share link."
+          },
+          "response": []
+        },
+        {
+          "name": "18. Create Sheet Replica",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sharedAgentId\": \"{{share_id}}\",\n  \"currentUserId\": \"user123\",\n  \"source\": \"shared-sheet\",\n  \"metadata\": {\n    \"newName\": \"My Copy of Sales Report\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/share-agent/replica",
+              "host": ["{{api_url}}"],
+              "path": ["share-agent", "replica"]
+            },
+            "description": "Create a copy of a shared sheet in user's account."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// Note: SSE streaming endpoints may not work correctly in Postman"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "// Store chat_id from create chat response",
+          "if (pm.request.url.toString().includes('create_chat') || pm.request.url.toString().includes('chat/create')) {",
+          "    try {",
+          "        var jsonData = pm.response.json();",
+          "        var chatId = jsonData.data?._id || jsonData._id;",
+          "        if (chatId) {",
+          "            pm.collectionVariables.set('chat_id', chatId);",
+          "        }",
+          "    } catch (e) {}",
+          "}",
+          "",
+          "// Store sheet_token from register response",
+          "if (pm.request.url.toString().includes('register-sheet-service')) {",
+          "    try {",
+          "        var jsonData = pm.response.json();",
+          "        if (jsonData.token) {",
+          "            pm.collectionVariables.set('sheet_token', jsonData.token);",
+          "        }",
+          "    } catch (e) {}",
+          "}",
+          "",
+          "// Store share_id from share response",
+          "if (pm.request.url.toString().includes('share-agent/private') || pm.request.url.toString().includes('share-agent/public')) {",
+          "    try {",
+          "        var jsonData = pm.response.json();",
+          "        if (jsonData.data?.shareId) {",
+          "            pm.collectionVariables.set('share_id', jsonData.data.shareId);",
+          "        }",
+          "    } catch (e) {}",
+          "}"
+        ]
+      }
+    }
+  ]
+}
+

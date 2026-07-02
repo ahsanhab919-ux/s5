@@ -1,0 +1,483 @@
+/* Brand Color System - Marketing Automation Platform */
+
+:root {
+  --primary-green: #00b67a;
+  --primary-green-hover: #00a06b;
+  --primary-green-light: #00d4a3;
+  --primary-green-dark: #008f5f;
+
+  /* Accent Green */
+  --accent-green: #10d9a0;
+  --accent-green-hover: #0ecb94;
+  --accent-green-light: #2ee5b3;
+  --accent-green-dark: #0dbb8a;
+
+  /* Secondary Colors - Neutrals */
+  --dark-gray: #2d3748;
+  --dark-gray-hover: #1a202c;
+  --dark-gray-light: #4a5568;
+
+  --medium-gray: #718096;
+  --medium-gray-hover: #5a6c7d;
+  --medium-gray-light: #a0aec0;
+
+  --light-gray: #e2e8f0;
+  --light-gray-hover: #cbd5e0;
+  --light-gray-light: #f7fafc;
+
+  --white: #ffffff;
+
+  /* Accent Colors for Icons/Tags */
+  --blue: #3b82f6;
+  --blue-hover: #2563eb;
+  --blue-light: #60a5fa;
+  --blue-dark: #1d4ed8;
+
+  --purple: #9333ea;
+  --purple-hover: #7c3aed;
+  --purple-light: #a855f7;
+  --purple-dark: #6b21a8;
+
+  --orange: #f97316;
+  --orange-hover: #ea580c;
+  --orange-light: #fb923c;
+  --orange-dark: #c2410c;
+
+  --cyan: #06b6d4;
+  --cyan-hover: #0891b2;
+  --cyan-light: #22d3ee;
+  --cyan-dark: #0e7490;
+
+  --pink: #ec4899;
+  --pink-hover: #db2777;
+  --pink-light: #f472b6;
+  --pink-dark: #be185d;
+
+  --red: #ff5757;
+  --red-hover: #ef4444;
+  --red-light: #f87171;
+  --red-dark: #dc2626;
+
+  /* Background Gradients */
+  --bg-primary: #ffffff;
+  --bg-secondary: linear-gradient(
+    135deg,
+    var(--primary-green) 0%,
+    var(--accent-green) 100%
+  );
+  --bg-accent: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+  --bg-sidebar: #f7fafc;
+  --bg-input: #f7fafc;
+
+  /* Card Backgrounds */
+  --card-bg: #ffffff;
+  --card-bg-hover: #f8fafc;
+  --card-border: #e2e8f0;
+  --card-border-hover: #cbd5e0;
+  --card-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+
+  /* Text Colors */
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-accent: var(--primary-green);
+  --text-white: var(--white);
+  --text-light: #a0aec0;
+
+  /* Status Colors */
+  --success: var(--primary-green);
+  --success-bg: #e6f7f0;
+  --success-border: rgba(0, 182, 122, 0.3);
+
+  --warning: var(--orange);
+  --warning-bg: #fef3e2;
+  --warning-border: rgba(249, 115, 22, 0.3);
+
+  --error: var(--red);
+  --error-bg: #fee2e2;
+  --error-border: rgba(255, 87, 87, 0.3);
+
+  --info: var(--blue);
+  --info-bg: #eff6ff;
+  --info-border: rgba(59, 130, 246, 0.3);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Brand Shadow */
+  --shadow-brand: 0 10px 25px -5px rgba(0, 182, 122, 0.3);
+  --shadow-brand-lg: 0 20px 40px -10px rgba(0, 182, 122, 0.4);
+}
+
+/* Utility Classes for Brand Colors */
+.bg-primary {
+  background-color: var(--primary-green);
+}
+.bg-primary-hover:hover {
+  background-color: var(--primary-green-hover);
+}
+.text-primary {
+  color: var(--primary-green);
+}
+.border-primary {
+  border-color: var(--primary-green);
+}
+
+.bg-accent {
+  background-color: var(--accent-green);
+}
+.bg-accent-hover:hover {
+  background-color: var(--accent-green-hover);
+}
+.text-accent {
+  color: var(--accent-green);
+}
+.border-accent {
+  border-color: var(--accent-green);
+}
+
+.bg-brand-gradient {
+  background: var(--bg-secondary);
+}
+.bg-accent-gradient {
+  background: var(--bg-accent);
+}
+
+/* Tag Colors */
+.tag-blue {
+  border-color: rgba(59, 130, 246, 0.3);
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--blue);
+}
+.tag-purple {
+  border-color: rgba(147, 51, 234, 0.3);
+  background-color: rgba(147, 51, 234, 0.1);
+  color: var(--purple);
+}
+.tag-orange {
+  border-color: rgba(249, 115, 22, 0.3);
+  background-color: rgba(249, 115, 22, 0.1);
+  color: var(--orange);
+}
+.tag-cyan {
+  border-color: rgba(6, 182, 212, 0.3);
+  background-color: rgba(6, 182, 212, 0.1);
+  color: var(--cyan);
+}
+.tag-pink {
+  border-color: rgba(236, 72, 153, 0.3);
+  background-color: rgba(236, 72, 153, 0.1);
+  color: var(--pink);
+}
+
+/* Status Classes */
+.status-success {
+  border-color: var(--success-border);
+  background-color: var(--success-bg);
+  color: var(--success);
+}
+.status-warning {
+  border-color: var(--warning-border);
+  background-color: var(--warning-bg);
+  color: var(--warning);
+}
+.status-error {
+  border-color: var(--error-border);
+  background-color: var(--error-bg);
+  color: var(--error);
+}
+.status-info {
+  border-color: var(--info-border);
+  background-color: var(--info-bg);
+  color: var(--info);
+}
+
+/* Card Styles */
+.card-brand {
+  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+}
+
+.card-brand:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--card-border-hover);
+  background: var(--card-bg-hover);
+}
+
+/* Project Card Styles */
+.project-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  padding: 20px;
+}
+
+.project-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--card-border-hover);
+  background: var(--card-bg-hover);
+}
+
+/* Feature Card Styles */
+.feature-card {
+  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  padding: 24px;
+  text-align: center;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--card-border-hover);
+  background: var(--card-bg-hover);
+}
+
+/* Button Styles */
+.btn-primary {
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-brand);
+  border: none;
+  background: var(--bg-secondary);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-brand-lg);
+  background: linear-gradient(
+    135deg,
+    var(--primary-green-hover) 0%,
+    var(--accent-green-hover) 100%
+  );
+}
+
+.btn-accent {
+  transition: all 0.3s ease;
+  border: none;
+  background: var(--bg-accent);
+  color: var(--white);
+}
+
+.btn-accent:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(
+    135deg,
+    var(--blue-hover) 0%,
+    var(--purple-hover) 100%
+  );
+}
+
+/* Input Styles */
+.input-brand {
+  transition: all 0.3s ease;
+  border: 1px solid var(--card-border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.input-brand:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 182, 122, 0.1);
+  border-color: var(--primary-green);
+}
+
+.input-brand::placeholder {
+  color: var(--medium-gray);
+}
+
+/* Text Styles */
+.text-brand-primary {
+  color: var(--text-primary);
+}
+.text-brand-secondary {
+  color: var(--text-secondary);
+}
+.text-brand-muted {
+  color: var(--text-muted);
+}
+.text-brand-accent {
+  color: var(--text-accent);
+}
+
+/* Background Styles */
+.bg-brand-primary {
+  background: var(--bg-primary);
+}
+.bg-brand-card {
+  background: var(--card-bg);
+}
+.bg-brand-card-hover:hover {
+  background: var(--card-bg-hover);
+}
+.bg-brand-sidebar {
+  background: var(--bg-sidebar);
+}
+.bg-brand-input {
+  background: var(--bg-input);
+}
+
+/* Text Styles for Light Theme */
+.text-brand-primary {
+  color: var(--text-primary);
+}
+.text-brand-secondary {
+  color: var(--text-secondary);
+}
+.text-brand-muted {
+  color: var(--text-muted);
+}
+.text-brand-accent {
+  color: var(--text-accent);
+}
+.text-brand-white {
+  color: var(--text-white);
+}
+
+/* Sidebar Styles */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: var(--text-secondary);
+}
+
+.sidebar-item:hover {
+  background: var(--card-bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-item.active {
+  background: var(--success-bg);
+  color: var(--primary-green);
+}
+
+.sidebar-item.active .sidebar-icon {
+  background: var(--primary-green);
+  color: var(--white);
+}
+
+.sidebar-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+}
+
+/* Tab Styles */
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  padding: 12px 24px;
+  color: var(--text-secondary);
+}
+
+.tab-item:hover {
+  background: var(--card-bg-hover);
+  color: var(--text-primary);
+}
+
+.tab-item.active {
+  border-color: var(--primary-green);
+  background: var(--primary-green);
+  color: var(--white);
+}
+
+/* Badge Styles */
+.badge-new {
+  border-radius: 10px;
+  background: var(--red);
+  padding: 2px 6px;
+  color: var(--white);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge-coming-soon {
+  border-radius: 10px;
+  background: var(--red);
+  padding: 2px 6px;
+  color: var(--white);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+#root {
+  margin: 0 auto;
+  padding: 2rem;
+  max-width: 1280px;
+  text-align: center;
+}
+
+.logo {
+  transition: filter 300ms;
+  will-change: filter;
+  padding: 1.5em;
+  height: 6em;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}

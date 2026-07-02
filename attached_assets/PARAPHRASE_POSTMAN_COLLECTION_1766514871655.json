@@ -1,0 +1,592 @@
+{
+  "info": {
+    "_postman_id": "paraphrase-service-2025",
+    "name": "Shothik AI - Paraphrase Service",
+    "description": "Complete API collection for Shothik AI Paraphrase Service including paraphrasing, auto-freeze, custom modes, and history management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "shothik-ai-paraphrase"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "api_prefix",
+      "value": "https://api-qa.shothik.ai/api",
+      "type": "string"
+    },
+    {
+      "key": "paraphrase_base",
+      "value": "https://api-qa.shothik.ai/p-v2/api",
+      "type": "string"
+    },
+    {
+      "key": "modes_base",
+      "value": "https://api-qa.shothik.ai/p-v2/api/modes",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Core Paraphrase",
+      "item": [
+        {
+          "name": "Paraphrase V2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"This is a sample text that needs to be paraphrased using advanced AI algorithms.\",\n  \"mode\": \"fluency\",\n  \"language\": \"en\",\n  \"settings\": {\n    \"strength\": \"medium\",\n    \"preserveFormatting\": true,\n    \"autoFreeze\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{paraphrase_base}}/paraphraseV2",
+              "host": ["{{paraphrase_base}}"],
+              "path": ["paraphraseV2"]
+            },
+            "description": "Main paraphrasing endpoint using V2 engine. Supports multiple modes (fluency, creative, formal, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "Paraphrase for Tagging",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Sample text for paraphrasing with tag preservation.\",\n  \"tags\": [\n    {\n      \"start\": 0,\n      \"end\": 6,\n      \"type\": \"preserve\"\n    }\n  ],\n  \"mode\": \"fluency\"\n}"
+            },
+            "url": {
+              "raw": "{{paraphrase_base}}/paraphrase-for-tagging",
+              "host": ["{{paraphrase_base}}"],
+              "path": ["paraphrase-for-tagging"]
+            },
+            "description": "Paraphrase text while preserving specific tagged sections (useful for maintaining names, technical terms, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Uses Limit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feature\": \"paraphrase\"\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/uses-limit",
+              "host": ["{{api_prefix}}"],
+              "path": ["uses-limit"]
+            },
+            "description": "Check remaining paraphrase quota/usage limits for the authenticated user"
+          },
+          "response": []
+        }
+      ],
+      "description": "Core paraphrasing APIs including main paraphrase engine and usage tracking"
+    },
+    {
+      "name": "Auto-Freeze",
+      "item": [
+        {
+          "name": "Detect Auto-Freeze Terms",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Albert Einstein developed the theory of relativity. His work on E=mc² revolutionized physics.\",\n  \"language\": \"en\",\n  \"useLLM\": true\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/auto-freeze/detect",
+              "host": ["{{api_prefix}}"],
+              "path": ["auto-freeze", "detect"]
+            },
+            "description": "Automatically detect terms that should be frozen (not paraphrased) such as names, technical terms, formulas, etc."
+          },
+          "response": []
+        },
+        {
+          "name": "Disable Auto-Freeze Term",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"term\": \"Albert Einstein\"\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/auto-freeze/disable",
+              "host": ["{{api_prefix}}"],
+              "path": ["auto-freeze", "disable"]
+            },
+            "description": "Disable auto-freeze for a specific term, allowing it to be paraphrased"
+          },
+          "response": []
+        },
+        {
+          "name": "Enable Auto-Freeze Term",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"term\": \"quantum mechanics\"\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/auto-freeze/enable",
+              "host": ["{{api_prefix}}"],
+              "path": ["auto-freeze", "enable"]
+            },
+            "description": "Enable auto-freeze for a specific term to preserve it during paraphrasing"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Disabled Terms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_prefix}}/auto-freeze/disabled-terms",
+              "host": ["{{api_prefix}}"],
+              "path": ["auto-freeze", "disabled-terms"]
+            },
+            "description": "Get list of terms that user has disabled from auto-freeze"
+          },
+          "response": []
+        }
+      ],
+      "description": "Auto-freeze feature for preserving specific terms during paraphrasing"
+    },
+    {
+      "name": "Custom Modes",
+      "item": [
+        {
+          "name": "Get Custom Modes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{modes_base}}/custom-modes",
+              "host": ["{{modes_base}}"],
+              "path": ["custom-modes"]
+            },
+            "description": "Get user's custom paraphrase modes and recently used modes"
+          },
+          "response": []
+        },
+        {
+          "name": "Save Custom Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Academic Writing\",\n  \"description\": \"Optimized for academic papers and research\",\n  \"settings\": {\n    \"tone\": \"formal\",\n    \"complexity\": \"high\",\n    \"vocabulary\": \"advanced\",\n    \"preserveCitations\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{modes_base}}/custom-modes",
+              "host": ["{{modes_base}}"],
+              "path": ["custom-modes"]
+            },
+            "description": "Create or save a new custom paraphrase mode with specific settings"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Custom Mode",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Academic Writing\"\n}"
+            },
+            "url": {
+              "raw": "{{modes_base}}/custom-modes/:modeId",
+              "host": ["{{modes_base}}"],
+              "path": ["custom-modes", ":modeId"],
+              "variable": [
+                {
+                  "key": "modeId",
+                  "value": "mode_123",
+                  "description": "Custom mode ID"
+                }
+              ]
+            },
+            "description": "Update an existing custom mode's name or settings"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Custom Mode",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{modes_base}}/custom-modes/:modeId",
+              "host": ["{{modes_base}}"],
+              "path": ["custom-modes", ":modeId"],
+              "variable": [
+                {
+                  "key": "modeId",
+                  "value": "mode_123",
+                  "description": "Custom mode ID to delete"
+                }
+              ]
+            },
+            "description": "Delete a custom paraphrase mode"
+          },
+          "response": []
+        },
+        {
+          "name": "Track Mode Usage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modeName\": \"fluency\"\n}"
+            },
+            "url": {
+              "raw": "{{modes_base}}/custom-modes/track-usage",
+              "host": ["{{modes_base}}"],
+              "path": ["custom-modes", "track-usage"]
+            },
+            "description": "Track usage of a paraphrase mode for analytics and recent modes list"
+          },
+          "response": []
+        }
+      ],
+      "description": "Custom paraphrase modes management - create, update, delete, and track custom paraphrasing configurations"
+    },
+    {
+      "name": "Grammar Check",
+      "item": [
+        {
+          "name": "Grammar Check",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"This sentence have grammatical error that need to be fixed.\",\n  \"language\": \"en\"\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/grammar/check",
+              "host": ["{{api_prefix}}"],
+              "path": ["grammar", "check"]
+            },
+            "description": "Check text for grammar, spelling, and style issues"
+          },
+          "response": []
+        }
+      ],
+      "description": "Grammar checking service (often used alongside paraphrasing)"
+    },
+    {
+      "name": "Report & Feedback",
+      "item": [
+        {
+          "name": "Report Sentence Issue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"originalSentence\": \"Original text that was paraphrased\",\n  \"paraphrasedSentence\": \"Paraphrased result that has issues\",\n  \"issue\": \"grammatical_error\",\n  \"description\": \"The paraphrased version contains grammatical mistakes\",\n  \"context\": {\n    \"mode\": \"fluency\",\n    \"language\": \"en\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/report/send-report",
+              "host": ["{{api_prefix}}"],
+              "path": ["report", "send-report"]
+            },
+            "description": "Report issues with paraphrased sentences for quality improvement"
+          },
+          "response": []
+        }
+      ],
+      "description": "Report paraphrasing issues and provide feedback"
+    },
+    {
+      "name": "Research Integration",
+      "item": [
+        {
+          "name": "Get Research Questions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"artificial intelligence in healthcare\",\n  \"count\": 5\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/research/questions",
+              "host": ["{{api_prefix}}"],
+              "path": ["research", "questions"]
+            },
+            "description": "Generate research questions based on a topic (useful for paraphrasing research content)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Research Metadata",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"machine learning algorithms\"\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/research/meta",
+              "host": ["{{api_prefix}}"],
+              "path": ["research", "meta"]
+            },
+            "description": "Get metadata for research topics"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trending Queries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_prefix}}/research/trending-queries",
+              "host": ["{{api_prefix}}"],
+              "path": ["research", "trending-queries"]
+            },
+            "description": "Get trending research queries and topics"
+          },
+          "response": []
+        }
+      ],
+      "description": "Research integration features for content generation and paraphrasing"
+    },
+    {
+      "name": "Agent Sessions",
+      "item": [
+        {
+          "name": "Create Agent Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"paraphrase\",\n  \"context\": {\n    \"mode\": \"fluency\",\n    \"language\": \"en\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{api_prefix}}/agent/session",
+              "host": ["{{api_prefix}}"],
+              "path": ["agent", "session"]
+            },
+            "description": "Create a new agent session for interactive paraphrasing"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agent Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_prefix}}/agent/session/:sessionId",
+              "host": ["{{api_prefix}}"],
+              "path": ["agent", "session", ":sessionId"],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "session_123",
+                  "description": "Agent session ID"
+                }
+              ]
+            },
+            "description": "Get details of an existing agent session"
+          },
+          "response": []
+        }
+      ],
+      "description": "Agent session management for interactive paraphrasing workflows"
+    }
+  ]
+}

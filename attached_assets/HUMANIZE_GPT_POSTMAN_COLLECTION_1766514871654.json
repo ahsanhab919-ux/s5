@@ -1,0 +1,321 @@
+{
+  "info": {
+    "_postman_id": "humanize-gpt-collection-shothik-v3",
+    "name": "Shothik AI - Humanize GPT APIs",
+    "description": "Complete API collection for Humanize GPT product/service in Shothik AI v3.\n\nThe Humanize GPT helps convert AI-generated content into human-like text that bypasses AI detection tools.\n\n**Base URL:** https://api-qa.shothik.ai/api\n\n**Total APIs:** 5 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "history_id",
+      "value": "history_123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Core Humanize API",
+      "description": "Main API for humanizing AI-generated content",
+      "item": [
+        {
+          "name": "1. Humanize Content (Panda Model - Basic)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence has revolutionized the way we interact with technology. Machine learning algorithms can now process vast amounts of data to generate insights that were previously impossible to obtain. These advancements have led to significant improvements in various fields, including healthcare, finance, and transportation.\",\n  \"model\": \"panda\",\n  \"level\": \"Basic\",\n  \"language\": \"English (US)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/humanizerV5",
+              "host": ["{{base_url}}"],
+              "path": ["humanizerV5"]
+            },
+            "description": "Humanize AI-generated text using the Panda model (free tier) with Basic level.\n\n**Models:**\n- `panda`: Free model\n- `raven`: Premium model\n\n**Levels:**\n- `Basic`: Light humanization\n- `Intermediate`: Moderate changes\n- `Advanced`: Significant rewriting\n- `Expert`: Maximum humanization"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"output\": [\n    {\n      \"text\": \"The way we use technology has been completely transformed by AI. These smart computer programs can now sift through huge piles of information and find patterns that humans could never spot on their own.\",\n      \"score\": 92,\n      \"aiPercentage\": 8\n    },\n    {\n      \"text\": \"AI has really changed how we deal with tech in our daily lives. These learning algorithms can crunch massive data sets and pull out insights we couldn't have imagined getting before.\",\n      \"score\": 88,\n      \"aiPercentage\": 12\n    },\n    {\n      \"text\": \"Technology interactions have shifted dramatically thanks to artificial intelligence. Modern algorithms process enormous datasets, revealing insights that were once out of reach.\",\n      \"score\": 85,\n      \"aiPercentage\": 15\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "1b. Humanize Content (Panda Model - Intermediate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence has revolutionized the way we interact with technology. Machine learning algorithms can now process vast amounts of data to generate insights that were previously impossible to obtain.\",\n  \"model\": \"panda\",\n  \"level\": \"Intermediate\",\n  \"language\": \"English (US)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/humanizerV5",
+              "host": ["{{base_url}}"],
+              "path": ["humanizerV5"]
+            },
+            "description": "Humanize with Intermediate level for more substantial changes."
+          },
+          "response": []
+        },
+        {
+          "name": "1c. Humanize Content (Panda Model - Advanced)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence has revolutionized the way we interact with technology. Machine learning algorithms can now process vast amounts of data to generate insights that were previously impossible to obtain.\",\n  \"model\": \"panda\",\n  \"level\": \"Advanced\",\n  \"language\": \"English (US)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/humanizerV5",
+              "host": ["{{base_url}}"],
+              "path": ["humanizerV5"]
+            },
+            "description": "Humanize with Advanced level for significant rewriting."
+          },
+          "response": []
+        },
+        {
+          "name": "1d. Humanize Content (Panda Model - Expert)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence has revolutionized the way we interact with technology. Machine learning algorithms can now process vast amounts of data to generate insights that were previously impossible to obtain.\",\n  \"model\": \"panda\",\n  \"level\": \"Expert\",\n  \"language\": \"English (US)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/humanizerV5",
+              "host": ["{{base_url}}"],
+              "path": ["humanizerV5"]
+            },
+            "description": "Humanize with Expert level for maximum humanization (complete rewrite)."
+          },
+          "response": []
+        },
+        {
+          "name": "1e. Humanize Content (Raven Model - Premium)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence has revolutionized the way we interact with technology. Machine learning algorithms can now process vast amounts of data to generate insights that were previously impossible to obtain.\",\n  \"model\": \"raven\",\n  \"level\": \"Expert\",\n  \"language\": \"English (US)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/humanizerV5",
+              "host": ["{{base_url}}"],
+              "path": ["humanizerV5"]
+            },
+            "description": "Humanize using the premium Raven model.\n\n**Note:** Requires premium subscription (value_plan, pro_plan, or unlimited)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "History Management",
+      "description": "APIs for managing humanization history",
+      "item": [
+        {
+          "name": "2. Get All Humanize History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gpt-history",
+              "host": ["{{base_url}}"],
+              "path": ["gpt-history"]
+            },
+            "description": "Fetch all humanization history for the authenticated user."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": \"history_123\",\n      \"text\": \"Original AI-generated text...\",\n      \"outputs\": [\n        {\n          \"text\": \"Humanized version 1...\",\n          \"score\": 92,\n          \"aiPercentage\": 8\n        },\n        {\n          \"text\": \"Humanized version 2...\",\n          \"score\": 88,\n          \"aiPercentage\": 12\n        }\n      ],\n      \"model\": \"panda\",\n      \"level\": \"Basic\",\n      \"language\": \"English (US)\",\n      \"createdAt\": \"2025-12-09T10:30:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Single History Entry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gpt-history/{{history_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["gpt-history", "{{history_id}}"]
+            },
+            "description": "Retrieve details of a specific humanization history entry."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"history_123\",\n    \"text\": \"Original AI-generated text that was humanized...\",\n    \"outputs\": [\n      {\n        \"text\": \"Humanized version 1...\",\n        \"score\": 92,\n        \"aiPercentage\": 8\n      },\n      {\n        \"text\": \"Humanized version 2...\",\n        \"score\": 88,\n        \"aiPercentage\": 12\n      }\n    ],\n    \"model\": \"panda\",\n    \"level\": \"Basic\",\n    \"language\": \"English (US)\",\n    \"createdAt\": \"2025-12-09T10:30:00Z\",\n    \"updatedAt\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Delete History Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gpt-history/{{history_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["gpt-history", "{{history_id}}"]
+            },
+            "description": "Remove a specific humanization history entry."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"History entry deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Statistics",
+      "description": "Usage statistics for humanization service",
+      "item": [
+        {
+          "name": "5. Get Humanize Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gpt-stats",
+              "host": ["{{base_url}}"],
+              "path": ["gpt-stats"]
+            },
+            "description": "Retrieve usage statistics for the humanization service."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"totalHumanizations\": 150,\n    \"totalWords\": 45000,\n    \"averageScore\": 89,\n    \"modelsUsed\": {\n      \"panda\": 120,\n      \"raven\": 30\n    },\n    \"levelsUsed\": {\n      \"Basic\": 80,\n      \"Intermediate\": 40,\n      \"Advanced\": 20,\n      \"Expert\": 10\n    },\n    \"lastUsed\": \"2025-12-09T10:30:00Z\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// You can add common logic here"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "pm.test('Response has success field', function () {",
+          "    var jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('success');",
+          "});"
+        ]
+      }
+    }
+  ]
+}
+

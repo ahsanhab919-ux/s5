@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "translator-collection-shothik-v3",
+    "name": "Shothik AI - Translator APIs",
+    "description": "Complete API collection for Translator product/service in Shothik AI v3.\n\nThe Translator service provides text translation between multiple languages with streaming response and optional humanization features.\n\n**Base URL:** https://api-qa.shothik.ai/api\n\n**Total APIs:** 2 endpoints\n\n**⚠️ IMPORTANT:** These are streaming endpoints. Postman may show 'Connection closed' error. Use curl instead for testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Core Translation API",
+      "description": "Main API for text translation",
+      "item": [
+        {
+          "name": "1. Translate Text (English to Spanish)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Note: lowercase 'authorization' is required"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Hello, how are you today? I hope you are doing well and having a great day.\",\n  \"direction\": \"English to Spanish\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/translator",
+              "host": ["{{base_url}}"],
+              "path": ["translator"]
+            },
+            "description": "Translate text from English to Spanish.\n\n**Direction Format:** `\"<source language> to <target language>\"`\n\n**Examples:**\n- `\"English to Spanish\"`\n- `\"Auto Detect to French\"`\n- `\"German to English\"`\n\n**⚠️ STREAMING ENDPOINT:** This endpoint returns a streaming response. Postman may show 'Connection closed' error.\n\n**Use curl instead:**\n```\ncurl -X POST 'https://api-qa.shothik.ai/api/translator' \\\n  -H 'Content-Type: application/json' \\\n  -H 'Accept: */*' \\\n  -H 'Connection: keep-alive' \\\n  -H 'authorization: Bearer YOUR_TOKEN' \\\n  --data-raw '{\"data\": \"Hello\", \"direction\": \"English to Spanish\"}'\n```"
+          },
+          "response": [
+            {
+              "name": "Success Response (Streaming)",
+              "status": "OK",
+              "code": 200,
+              "body": "Hola, ¿cómo estás hoy? Espero que estés bien y tengas un gran día."
+            }
+          ]
+        },
+        {
+          "name": "1b. Translate Text (Auto Detect to French)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Good morning! How can I help you today?\",\n  \"direction\": \"Auto Detect to French\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/translator",
+              "host": ["{{base_url}}"],
+              "path": ["translator"]
+            },
+            "description": "Translate text with automatic source language detection to French."
+          },
+          "response": []
+        },
+        {
+          "name": "1c. Translate Text (German to English)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Guten Tag! Wie geht es Ihnen heute? Ich hoffe, es geht Ihnen gut.\",\n  \"direction\": \"German to English\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/translator",
+              "host": ["{{base_url}}"],
+              "path": ["translator"]
+            },
+            "description": "Translate text from German to English."
+          },
+          "response": []
+        },
+        {
+          "name": "1d. Translate Text (English to Chinese)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Welcome to our company. We are glad to have you here.\",\n  \"direction\": \"English to Chinese\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/translator",
+              "host": ["{{base_url}}"],
+              "path": ["translator"]
+            },
+            "description": "Translate text from English to Chinese."
+          },
+          "response": []
+        },
+        {
+          "name": "1e. Translate Text (English to Japanese)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Thank you for your patience and understanding.\",\n  \"direction\": \"English to Japanese\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/translator",
+              "host": ["{{base_url}}"],
+              "path": ["translator"]
+            },
+            "description": "Translate text from English to Japanese."
+          },
+          "response": []
+        },
+        {
+          "name": "1f. Translate Text (English to Arabic)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Peace be upon you. How can I assist you today?\",\n  \"direction\": \"English to Arabic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/translator",
+              "host": ["{{base_url}}"],
+              "path": ["translator"]
+            },
+            "description": "Translate text from English to Arabic."
+          },
+          "response": []
+        },
+        {
+          "name": "1g. Translate Text (English to Bengali)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Hello! Welcome to Bangladesh. We hope you enjoy your stay.\",\n  \"direction\": \"English to Bengali\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/translator",
+              "host": ["{{base_url}}"],
+              "path": ["translator"]
+            },
+            "description": "Translate text from English to Bengali."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Humanize Translation",
+      "description": "API to humanize/fix grammar in translated text",
+      "item": [
+        {
+          "name": "2. Humanize Translation (Fix Grammar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Note: lowercase 'authorization' is required"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Hola, ¿cómo estás hoy? Espero que estés bien y tengas un gran día.\",\n  \"language\": \"Spanish\",\n  \"mode\": \"Fixed\",\n  \"synonym\": \"Basic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fix-grammar",
+              "host": ["{{base_url}}"],
+              "path": ["fix-grammar"]
+            },
+            "description": "Humanize and improve translated text by fixing grammar issues.\n\n**Parameters:**\n- `data`: The translated text to humanize\n- `language`: Target language of the text\n- `mode`: Processing mode (\"Fixed\")\n- `synonym`: Synonym level (\"Basic\")\n\n**⚠️ STREAMING ENDPOINT:** This endpoint returns a streaming response."
+          },
+          "response": [
+            {
+              "name": "Success Response (Streaming)",
+              "status": "OK",
+              "code": 200,
+              "body": "Hola, ¿cómo te encuentras hoy? Espero que te encuentres bien y que tengas un excelente día."
+            }
+          ]
+        },
+        {
+          "name": "2b. Humanize Translation (French)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Bonjour! Comment puis-je vous aider aujourd'hui?\",\n  \"language\": \"French\",\n  \"mode\": \"Fixed\",\n  \"synonym\": \"Basic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fix-grammar",
+              "host": ["{{base_url}}"],
+              "path": ["fix-grammar"]
+            },
+            "description": "Humanize French translated text."
+          },
+          "response": []
+        },
+        {
+          "name": "2c. Humanize Translation (German)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"Guten Tag! Wie kann ich Ihnen heute helfen?\",\n  \"language\": \"German\",\n  \"mode\": \"Fixed\",\n  \"synonym\": \"Basic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fix-grammar",
+              "host": ["{{base_url}}"],
+              "path": ["fix-grammar"]
+            },
+            "description": "Humanize German translated text."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// Note: These are streaming endpoints - Postman may not handle them correctly",
+          "// Use curl for testing instead"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "// Note: Streaming endpoints may show 'Connection closed' in Postman",
+          "// This is expected behavior - use curl for proper testing",
+          "",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});"
+        ]
+      }
+    }
+  ]
+}
+

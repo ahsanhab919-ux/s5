@@ -1,0 +1,665 @@
+{
+  "info": {
+    "_postman_id": "presentation-slide-collection-shothik-v3",
+    "name": "Shothik AI - Presentation/Slide APIs",
+    "description": "Complete API collection for Slide/Presentation product/service in Shothik AI v3.\n\nThe Presentation service provides AI-powered slide generation with real-time streaming, file uploads, editing capabilities, and sharing features.\n\n**Base URLs:**\n- Slide API: https://api-qa.shothik.ai/slide\n- Share API: https://api-qa.shothik.ai/api\n\n**Total APIs:** 20 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "slide_url",
+      "value": "https://api-qa.shothik.ai/slide",
+      "type": "string"
+    },
+    {
+      "key": "api_url",
+      "value": "https://api-qa.shothik.ai/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "presentation_id",
+      "value": "YOUR_PRESENTATION_ID",
+      "type": "string"
+    },
+    {
+      "key": "slide_id",
+      "value": "YOUR_SLIDE_ID",
+      "type": "string"
+    },
+    {
+      "key": "share_link",
+      "value": "YOUR_SHARE_LINK",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Presentation Core APIs",
+      "description": "Core APIs for creating and managing presentations",
+      "item": [
+        {
+          "name": "1. Create Presentation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Create a presentation about climate change and its impact on global ecosystems\"\n}"
+            },
+            "url": {
+              "raw": "{{slide_url}}/create-presentation",
+              "host": ["{{slide_url}}"],
+              "path": ["create-presentation"]
+            },
+            "description": "Create a new presentation from a message prompt."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"presentationId\": \"pres_123456789\",\n  \"status\": \"queued\",\n  \"message\": \"Presentation creation started\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "1b. Create Presentation with Files",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Create a presentation based on the attached research document\",\n  \"file_urls\": [\n    {\n      \"url\": \"https://example.com/research-paper.pdf\",\n      \"name\": \"research-paper.pdf\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{slide_url}}/create-presentation",
+              "host": ["{{slide_url}}"],
+              "path": ["create-presentation"]
+            },
+            "description": "Create a new presentation with file attachments."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Initialize Presentation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Create a 10-slide presentation about artificial intelligence in healthcare\"\n}"
+            },
+            "url": {
+              "raw": "{{slide_url}}/presentation/init",
+              "host": ["{{slide_url}}"],
+              "path": ["presentation", "init"]
+            },
+            "description": "Alternative endpoint to initialize a presentation."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get All Presentations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/presentations",
+              "host": ["{{slide_url}}"],
+              "path": ["presentations"]
+            },
+            "description": "Retrieve all presentations for the authenticated user."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"_id\": \"pres_123456789\",\n      \"title\": \"Climate Change Impact\",\n      \"status\": \"completed\",\n      \"totalSlides\": 10,\n      \"createdAt\": \"2025-12-09T10:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Get Presentation Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/presentation-status/{{presentation_id}}",
+              "host": ["{{slide_url}}"],
+              "path": ["presentation-status", "{{presentation_id}}"]
+            },
+            "description": "Check the current status of a presentation.\n\n**Status Values:**\n- `queued`: In queue\n- `processing`: Being generated\n- `completed`: Successfully generated\n- `failed`: Generation failed"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"completed\",\n  \"progress\": 100,\n  \"title\": \"Climate Change Impact\",\n  \"totalSlides\": 10\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Get Presentation Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/presentation/logs/{{presentation_id}}",
+              "host": ["{{slide_url}}"],
+              "path": ["presentation", "logs", "{{presentation_id}}"]
+            },
+            "description": "Retrieve generation logs for a presentation."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Presentation History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/logs?p_id={{presentation_id}}",
+              "host": ["{{slide_url}}"],
+              "path": ["logs"],
+              "query": [
+                {
+                  "key": "p_id",
+                  "value": "{{presentation_id}}"
+                }
+              ]
+            },
+            "description": "Alternative endpoint to get presentation history/logs."
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Slides",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/slides?p_id={{presentation_id}}",
+              "host": ["{{slide_url}}"],
+              "path": ["slides"],
+              "query": [
+                {
+                  "key": "p_id",
+                  "value": "{{presentation_id}}"
+                }
+              ]
+            },
+            "description": "Retrieve all slides for a presentation."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"slides\": [\n    {\n      \"_id\": \"slide_001\",\n      \"index\": 0,\n      \"htmlContent\": \"<div class='slide'>...</div>\",\n      \"title\": \"Introduction\",\n      \"version\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "8. SSE Stream (Real-time)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/stream/{{presentation_id}}",
+              "host": ["{{slide_url}}"],
+              "path": ["stream", "{{presentation_id}}"]
+            },
+            "description": "Connect to Server-Sent Events stream for real-time updates.\n\n**⚠️ SSE STREAMING ENDPOINT:** Postman may not handle this correctly. Use curl:\n```\ncurl -X GET 'https://api-qa.shothik.ai/slide/stream/{{presentation_id}}' \\\n  -H 'Accept: text/event-stream' \\\n  -H 'Authorization: Bearer YOUR_TOKEN' \\\n  --no-buffer\n```"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "File Upload APIs",
+      "description": "APIs for uploading files",
+      "item": [
+        {
+          "name": "9. Upload Files",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Files to upload"
+                },
+                {
+                  "key": "user_id",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional user ID"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{slide_url}}/upload-file",
+              "host": ["{{slide_url}}"],
+              "path": ["upload-file"]
+            },
+            "description": "Upload files to be used in presentation generation.\n\n**Note:** Do NOT set Content-Type header manually - let the browser set it with multipart boundary."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"files\": [\n    {\n      \"url\": \"https://storage.example.com/uploads/document.pdf\",\n      \"name\": \"document.pdf\",\n      \"type\": \"application/pdf\",\n      \"size\": 1024000\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Slide Editing APIs",
+      "description": "APIs for editing slides",
+      "item": [
+        {
+          "name": "10. Save Slide (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"presentation_id\": \"{{presentation_id}}\",\n  \"html_content\": \"<div class='slide'>Updated content...</div>\",\n  \"metadata\": {\n    \"lastEdited\": \"2025-12-09T12:00:00.000Z\",\n    \"editedBy\": \"user123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{slide_url}}/slides/{{slide_id}}/save",
+              "host": ["{{slide_url}}"],
+              "path": ["slides", "{{slide_id}}", "save"]
+            },
+            "description": "Save edits to a specific slide using PATCH method."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"slideId\": \"slide_001\",\n  \"version\": 2,\n  \"savedAt\": \"2025-12-09T12:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "11. Save Slide (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"htmlContent\": \"<div class='slide'>Updated content...</div>\",\n  \"presentationId\": \"{{presentation_id}}\",\n  \"slideIndex\": 0,\n  \"metadata\": {\n    \"lastEdited\": \"2025-12-09T12:00:00.000Z\",\n    \"editedBy\": \"user123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{slide_url}}/slides/save",
+              "host": ["{{slide_url}}"],
+              "path": ["slides", "save"]
+            },
+            "description": "Alternative endpoint to save slide edits using PUT method."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Simulation APIs",
+      "description": "APIs for simulation/demo presentations",
+      "item": [
+        {
+          "name": "12. Get Simulation Slides",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/simulation_slides/{{slide_id}}",
+              "host": ["{{slide_url}}"],
+              "path": ["simulation_slides", "{{slide_id}}"]
+            },
+            "description": "Get slides for a simulation/demo presentation."
+          },
+          "response": []
+        },
+        {
+          "name": "13. Get Simulation Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{slide_url}}/simulation-logs/{{slide_id}}",
+              "host": ["{{slide_url}}"],
+              "path": ["simulation-logs", "{{slide_id}}"]
+            },
+            "description": "Get logs for a simulation/demo presentation."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Share APIs",
+      "description": "APIs for sharing presentations",
+      "item": [
+        {
+          "name": "14. Generate Share Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{api_url}}/share/{{presentation_id}}/generate",
+              "host": ["{{api_url}}"],
+              "path": ["share", "{{presentation_id}}", "generate"]
+            },
+            "description": "Generate a shareable link for a presentation."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"shareId\": \"share_abc123\",\n  \"shareLink\": \"https://shothik.ai/shared/slide/share_abc123\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "15. Get Share Link",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/share/{{presentation_id}}",
+              "host": ["{{api_url}}"],
+              "path": ["share", "{{presentation_id}}"]
+            },
+            "description": "Get existing share link for a presentation."
+          },
+          "response": []
+        },
+        {
+          "name": "16. Get Share Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/share/{{presentation_id}}/analytics",
+              "host": ["{{api_url}}"],
+              "path": ["share", "{{presentation_id}}", "analytics"]
+            },
+            "description": "Get analytics for a shared presentation."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"totalViews\": 150,\n  \"uniqueViews\": 85,\n  \"viewsByDate\": [\n    {\"date\": \"2025-12-08\", \"views\": 45},\n    {\"date\": \"2025-12-09\", \"views\": 105}\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "17. Update Share Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requirePassword\": true,\n  \"password\": \"securePassword123\",\n  \"expiresAt\": \"2025-12-31T23:59:59.000Z\",\n  \"allowDownload\": false\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/share/{{presentation_id}}/settings",
+              "host": ["{{api_url}}"],
+              "path": ["share", "{{presentation_id}}", "settings"]
+            },
+            "description": "Update settings for a shared presentation."
+          },
+          "response": []
+        },
+        {
+          "name": "18. Delete Share Link",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/share/{{presentation_id}}",
+              "host": ["{{api_url}}"],
+              "path": ["share", "{{presentation_id}}"]
+            },
+            "description": "Delete/deactivate a share link."
+          },
+          "response": []
+        },
+        {
+          "name": "19. Fetch Shared Presentation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/share/shared/{{share_link}}",
+              "host": ["{{api_url}}"],
+              "path": ["share", "shared", "{{share_link}}"],
+              "query": [
+                {
+                  "key": "password",
+                  "value": "",
+                  "description": "Optional password if required",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Fetch a shared presentation by share link (public access)."
+          },
+          "response": []
+        },
+        {
+          "name": "20. Track View",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/share/track-view/{{share_link}}",
+              "host": ["{{api_url}}"],
+              "path": ["share", "track-view", "{{share_link}}"]
+            },
+            "description": "Track when a shared presentation is viewed."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// Note: SSE streaming endpoints may not work correctly in Postman"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "// Store presentation_id from create response",
+          "if (pm.request.url.toString().includes('create-presentation') || pm.request.url.toString().includes('presentation/init')) {",
+          "    try {",
+          "        var jsonData = pm.response.json();",
+          "        var presentationId = jsonData.presentationId || jsonData.presentation_id || jsonData.p_id;",
+          "        if (presentationId) {",
+          "            pm.collectionVariables.set('presentation_id', presentationId);",
+          "        }",
+          "    } catch (e) {}",
+          "}",
+          "",
+          "// Store share_link from generate response",
+          "if (pm.request.url.toString().includes('/generate')) {",
+          "    try {",
+          "        var jsonData = pm.response.json();",
+          "        if (jsonData.shareId) {",
+          "            pm.collectionVariables.set('share_link', jsonData.shareId);",
+          "        }",
+          "    } catch (e) {}",
+          "}"
+        ]
+      }
+    }
+  ]
+}
+

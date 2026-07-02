@@ -1,0 +1,371 @@
+{
+	"info": {
+		"_postman_id": "auth-collection-001",
+		"name": "Shothik AI - Authentication API",
+		"description": "Complete authentication endpoints for Shothik AI platform including login, registration, Google OAuth, password reset, email verification, and permissions.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"auth_type\": \"manual\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Login with email and password. Supports both manual and Google auth types. For oneTapLogin, include oneTapLogin: true and oneTapUser object."
+					},
+					"response": []
+				},
+				{
+					"name": "Login with One Tap",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"oneTapLogin\": true,\n  \"oneTapUser\": {\n    \"email\": \"user@example.com\",\n    \"name\": \"John Doe\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Login using Google One Tap. Auto-registers user if not found."
+					},
+					"response": []
+				},
+				{
+					"name": "Login V2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"auth_type\": \"manual\",\n  \"code\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/v2/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "v2", "login"]
+						},
+						"description": "Version 2 of login endpoint with enhanced Google OAuth integration. If no code provided, returns Google OAuth URL."
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"auth_type\": \"manual\",\n  \"country\": \"Bangladesh\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Register a new user with manual or Google auth type. Sends verification email after registration. Password must be at least 6 characters for manual auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Google Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"4/0AfJohXm...\",\n  \"country\": \"Bangladesh\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/google-login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "google-login"]
+						},
+						"description": "Login or register using Google OAuth. Requires authorization code from Google OAuth flow. Creates user if not exists and stores Google tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Google OAuth URL",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/v2/google",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "v2", "google"]
+						},
+						"description": "Redirects to Google OAuth consent screen. Used to initiate Google OAuth flow."
+					},
+					"response": []
+				},
+				{
+					"name": "Google OAuth Callback",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/google/callback?code=4/0AfJohXm...",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "google", "callback"],
+							"query": [
+								{
+									"key": "code",
+									"value": "4/0AfJohXm...",
+									"description": "Authorization code from Google"
+								}
+							]
+						},
+						"description": "Callback endpoint for Google OAuth. Exchanges code for tokens and updates user with Google credentials."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Token Management",
+			"item": [
+				{
+					"name": "Generate Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"description": "JWT token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/token-generate",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "token-generate"]
+						},
+						"description": "Regenerate authentication token for logged-in user. Requires valid JWT token in Authorization header."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Password Management",
+			"item": [
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "forgot-password"]
+						},
+						"description": "Request password reset link. Sends email with reset link valid for 5 minutes."
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/reset-password/:key",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "reset-password", ":key"],
+							"variable": [
+								{
+									"key": "key",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+									"description": "JWT token from email link"
+								}
+							]
+						},
+						"description": "Reset password using token from email. Password must be at least 6 characters. Token expires in 5 minutes."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Email Verification",
+			"item": [
+				{
+					"name": "Resend Verification Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/send-verify-email",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "send-verify-email"]
+						},
+						"description": "Resend email verification link. Token valid for 5 minutes."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/verify-email/:key",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "verify-email", ":key"],
+							"variable": [
+								{
+									"key": "key",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+									"description": "JWT token from verification email"
+								}
+							]
+						},
+						"description": "Verify user email using token from verification email. Marks user as verified and returns new auth token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Permissions",
+			"item": [
+				{
+					"name": "Add User Permission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"description": "JWT token"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"4/0AfJohXm...\",\n  \"type\": \"google\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/user-permission",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "user-permission"]
+						},
+						"description": "Grant Google permissions to user account. Stores Google access and refresh tokens for services like Gmail. Requires authorization code from Google OAuth."
+					},
+					"response": []
+				},
+				{
+					"name": "Check User Permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"description": "JWT token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/check-permission",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "check-permission"]
+						},
+						"description": "Check current user's permissions including Google OAuth tokens and email access."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,355 @@
+{
+  "info": {
+    "_postman_id": "summarize-collection-shothik-v3",
+    "name": "Shothik AI - Summarize APIs",
+    "description": "Complete API collection for Summarize product/service in Shothik AI v3.\n\nThe Summarize service helps condense long text content into concise summaries with customizable length and format options.\n\n**Base URL:** https://api-qa.shothik.ai/api\n\n**Total APIs:** 2 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Core Summarize API",
+      "description": "Main API for text summarization",
+      "item": [
+        {
+          "name": "1. Summarize Text (Paragraph - Short)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Note: lowercase 'authorization' is required"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence (AI) is transforming industries across the globe. From healthcare to finance, AI-powered solutions are automating complex tasks, improving decision-making, and creating new opportunities for innovation. Machine learning algorithms can analyze vast amounts of data to identify patterns and make predictions with remarkable accuracy. Natural language processing enables computers to understand and generate human language, powering virtual assistants and chatbots. Computer vision allows machines to interpret visual information, enabling applications in autonomous vehicles and medical imaging. As AI continues to evolve, it promises to reshape how we work, live, and interact with technology.\",\n  \"mode\": \"Paragraph\",\n  \"length\": \"short\",\n  \"keywords\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize",
+              "host": ["{{base_url}}"],
+              "path": ["summarize"]
+            },
+            "description": "Summarize text content into a short paragraph format.\n\n**Modes:**\n- `Paragraph`: Flowing paragraphs\n- `Key Sentences`: Bullet-point format\n\n**Lengths:**\n- `short`: ~20% of original\n- `regular`: ~40% of original\n- `medium`: ~60% of original\n- `long`: ~80% of original\n\n**⚠️ IMPORTANT:** This endpoint returns a streaming response. Postman may show 'Connection closed' error. Use curl instead:\n\n```\ncurl -X POST 'https://api-qa.shothik.ai/api/summarize' \\\n  -H 'Content-Type: application/json' \\\n  -H 'Accept: */*' \\\n  -H 'Connection: keep-alive' \\\n  -H 'authorization: Bearer YOUR_TOKEN' \\\n  --data-raw '{...}'\n```"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"summary\": \"AI is revolutionizing industries worldwide by automating tasks and improving decision-making. Machine learning analyzes data for predictions, while NLP powers virtual assistants. Computer vision enables autonomous vehicles and medical imaging applications.\",\n    \"originalLength\": 589,\n    \"summaryLength\": 198,\n    \"compressionRatio\": 0.34\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "1b. Summarize Text (Paragraph - Regular)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence (AI) is transforming industries across the globe. From healthcare to finance, AI-powered solutions are automating complex tasks, improving decision-making, and creating new opportunities for innovation. Machine learning algorithms can analyze vast amounts of data to identify patterns and make predictions with remarkable accuracy. Natural language processing enables computers to understand and generate human language, powering virtual assistants and chatbots. Computer vision allows machines to interpret visual information, enabling applications in autonomous vehicles and medical imaging. As AI continues to evolve, it promises to reshape how we work, live, and interact with technology.\",\n  \"mode\": \"Paragraph\",\n  \"length\": \"regular\",\n  \"keywords\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize",
+              "host": ["{{base_url}}"],
+              "path": ["summarize"]
+            },
+            "description": "Summarize text content into a regular-length paragraph."
+          },
+          "response": []
+        },
+        {
+          "name": "1c. Summarize Text (Paragraph - Medium)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence (AI) is transforming industries across the globe. From healthcare to finance, AI-powered solutions are automating complex tasks, improving decision-making, and creating new opportunities for innovation. Machine learning algorithms can analyze vast amounts of data to identify patterns and make predictions with remarkable accuracy. Natural language processing enables computers to understand and generate human language, powering virtual assistants and chatbots. Computer vision allows machines to interpret visual information, enabling applications in autonomous vehicles and medical imaging. As AI continues to evolve, it promises to reshape how we work, live, and interact with technology.\",\n  \"mode\": \"Paragraph\",\n  \"length\": \"medium\",\n  \"keywords\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize",
+              "host": ["{{base_url}}"],
+              "path": ["summarize"]
+            },
+            "description": "Summarize text content into a medium-length paragraph."
+          },
+          "response": []
+        },
+        {
+          "name": "1d. Summarize Text (Paragraph - Long)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence (AI) is transforming industries across the globe. From healthcare to finance, AI-powered solutions are automating complex tasks, improving decision-making, and creating new opportunities for innovation. Machine learning algorithms can analyze vast amounts of data to identify patterns and make predictions with remarkable accuracy. Natural language processing enables computers to understand and generate human language, powering virtual assistants and chatbots. Computer vision allows machines to interpret visual information, enabling applications in autonomous vehicles and medical imaging. As AI continues to evolve, it promises to reshape how we work, live, and interact with technology.\",\n  \"mode\": \"Paragraph\",\n  \"length\": \"long\",\n  \"keywords\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize",
+              "host": ["{{base_url}}"],
+              "path": ["summarize"]
+            },
+            "description": "Summarize text content into a long/comprehensive paragraph."
+          },
+          "response": []
+        },
+        {
+          "name": "1e. Summarize Text (Key Sentences)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Climate change represents one of the most pressing challenges facing humanity today. Rising global temperatures are causing more frequent and severe weather events, including hurricanes, droughts, and flooding. Sea levels are rising due to melting ice caps, threatening coastal communities worldwide. The scientific consensus is clear: human activities, particularly the burning of fossil fuels, are the primary driver of these changes. Addressing climate change requires a coordinated global response, including transitioning to renewable energy sources, improving energy efficiency, and protecting natural carbon sinks like forests and oceans.\",\n  \"mode\": \"Key Sentences\",\n  \"length\": \"medium\",\n  \"keywords\": [\"climate change\", \"renewable energy\", \"global response\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize",
+              "host": ["{{base_url}}"],
+              "path": ["summarize"]
+            },
+            "description": "Summarize text content into key sentences (bullet-point format)."
+          },
+          "response": []
+        },
+        {
+          "name": "1f. Summarize Text (With Keywords)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"The global economy is experiencing significant changes due to technological advancements and shifting market dynamics. Digital transformation is accelerating across all sectors, with businesses investing heavily in cloud computing, artificial intelligence, and automation. Remote work has become the new normal, fundamentally changing how companies operate and how employees collaborate. Supply chain disruptions have highlighted the need for more resilient and diversified sourcing strategies. Meanwhile, sustainability and ESG considerations are increasingly influencing investment decisions and corporate strategies.\",\n  \"mode\": \"Paragraph\",\n  \"length\": \"short\",\n  \"keywords\": [\"digital transformation\", \"remote work\", \"sustainability\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize",
+              "host": ["{{base_url}}"],
+              "path": ["summarize"]
+            },
+            "description": "Summarize text content with specific keywords to focus on."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Keyword Extraction",
+      "description": "API for extracting keywords from text",
+      "item": [
+        {
+          "name": "2. Extract Keywords from Text",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence is transforming healthcare through machine learning algorithms that can analyze medical images and predict patient outcomes. Deep learning models are being used for drug discovery and personalized treatment plans. Natural language processing enables better analysis of clinical notes and medical literature.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize-keywords",
+              "host": ["{{base_url}}"],
+              "path": ["summarize-keywords"]
+            },
+            "description": "Extract important keywords from text content. These keywords can then be used to focus the summary on specific topics.\n\n**Note:** Minimum text length of 10 characters required."
+          },
+          "response": [
+            {
+              "name": "Success Response (Array)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    \"artificial intelligence\",\n    \"healthcare\",\n    \"machine learning\",\n    \"medical images\",\n    \"deep learning\",\n    \"drug discovery\",\n    \"personalized treatment\",\n    \"natural language processing\"\n  ]\n}"
+            },
+            {
+              "name": "Success Response (Keywords property)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"keywords\": [\n    \"artificial intelligence\",\n    \"healthcare\",\n    \"machine learning\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2b. Extract Keywords (Short Text)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Machine learning and deep learning are revolutionizing data science and analytics.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/summarize-keywords",
+              "host": ["{{base_url}}"],
+              "path": ["summarize-keywords"]
+            },
+            "description": "Extract keywords from shorter text content."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// You can add common logic here"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "// Note: Summarize endpoint returns streaming response",
+          "// so JSON parsing may not always work"
+        ]
+      }
+    }
+  ]
+}
+

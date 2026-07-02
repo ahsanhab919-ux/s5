@@ -1,0 +1,553 @@
+{
+  "info": {
+    "_postman_id": "deep-research-collection-shothik-v3",
+    "name": "Shothik AI - Deep Research APIs",
+    "description": "Complete API collection for Deep Research product/service in Shothik AI v3.\n\nThe Deep Research service provides advanced AI-powered research capabilities with multi-source web searches, queue-based processing, streaming responses, and comprehensive chat management.\n\n**Base URLs:**\n- Deep Research: https://api-qa.shothik.ai/deep-research\n- Basic Research: https://api-qa.shothik.ai/api\n\n**Total APIs:** 14 endpoints\n\n**⚠️ IMPORTANT:** Some endpoints are SSE streaming endpoints. Postman may show 'Connection closed' error. Use curl instead for testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "deep_research_url",
+      "value": "https://api-qa.shothik.ai/deep-research",
+      "type": "string"
+    },
+    {
+      "key": "api_url",
+      "value": "https://api-qa.shothik.ai/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "chat_id",
+      "value": "YOUR_CHAT_ID",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "YOUR_JOB_ID",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Chat Management",
+      "description": "APIs for managing research chat sessions",
+      "item": [
+        {
+          "name": "1. Create Research Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Climate Change Research\"\n}"
+            },
+            "url": {
+              "raw": "{{deep_research_url}}/chat/create_chat",
+              "host": ["{{deep_research_url}}"],
+              "path": ["chat", "create_chat"]
+            },
+            "description": "Create a new chat session for research."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"_id\": \"6501234567890abcdef12345\",\n  \"name\": \"Climate Change Research\",\n  \"userId\": \"user123\",\n  \"createdAt\": \"2025-12-09T10:00:00.000Z\",\n  \"updatedAt\": \"2025-12-09T10:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Get User's Research Chats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{deep_research_url}}/chat/get_my_chats",
+              "host": ["{{deep_research_url}}"],
+              "path": ["chat", "get_my_chats"]
+            },
+            "description": "Retrieve all research chat sessions for the authenticated user."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"_id\": \"6501234567890abcdef12345\",\n    \"name\": \"Climate Change Research\",\n    \"userId\": \"user123\",\n    \"createdAt\": \"2025-12-09T10:00:00.000Z\"\n  },\n  {\n    \"_id\": \"6501234567890abcdef12346\",\n    \"name\": \"AI Trends 2025\",\n    \"userId\": \"user123\",\n    \"createdAt\": \"2025-12-08T09:00:00.000Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "3. Get One Chat",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{deep_research_url}}/chat/get_one_chat/{{chat_id}}",
+              "host": ["{{deep_research_url}}"],
+              "path": ["chat", "get_one_chat", "{{chat_id}}"]
+            },
+            "description": "Retrieve a specific chat session by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update Chat Name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Climate Change Analysis 2025\"\n}"
+            },
+            "url": {
+              "raw": "{{deep_research_url}}/chat/update_name/{{chat_id}}",
+              "host": ["{{deep_research_url}}"],
+              "path": ["chat", "update_name", "{{chat_id}}"]
+            },
+            "description": "Update the name of a specific chat session."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Delete Chat",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{deep_research_url}}/chat/delete_chat/{{chat_id}}",
+              "host": ["{{deep_research_url}}"],
+              "path": ["chat", "delete_chat", "{{chat_id}}"]
+            },
+            "description": "Delete a specific chat session."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Research Queue APIs (SSE)",
+      "description": "Queue-based research APIs with Server-Sent Events streaming",
+      "item": [
+        {
+          "name": "6. Create Research Queue (Low Effort)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chat\": \"{{chat_id}}\",\n  \"query\": \"What are the latest developments in climate change mitigation?\",\n  \"config\": {\n    \"query_generator_model\": \"gemini-2.0-flash\",\n    \"reflection_model\": \"gemini-2.0-flash\",\n    \"answer_model\": \"gemini-2.0-flash\",\n    \"number_of_initial_queries\": 1,\n    \"max_research_loops\": 1\n  }\n}"
+            },
+            "url": {
+              "raw": "{{deep_research_url}}/research/create_research_queue",
+              "host": ["{{deep_research_url}}"],
+              "path": ["research", "create_research_queue"]
+            },
+            "description": "Start a new deep research with queue-based processing (Low Effort).\n\n**⚠️ SSE STREAMING ENDPOINT:** This endpoint returns Server-Sent Events. Postman may not handle it correctly.\n\n**Effort Levels:**\n- Low: 1 initial query, 1 research loop\n- Medium: 2 initial queries, 2 research loops\n- High: 3 initial queries, 3 research loops"
+          },
+          "response": []
+        },
+        {
+          "name": "6b. Create Research Queue (Medium Effort)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chat\": \"{{chat_id}}\",\n  \"query\": \"What are the economic impacts of artificial intelligence on global workforce?\",\n  \"config\": {\n    \"query_generator_model\": \"gemini-2.0-flash\",\n    \"reflection_model\": \"gemini-2.0-flash\",\n    \"answer_model\": \"gemini-2.0-flash\",\n    \"number_of_initial_queries\": 2,\n    \"max_research_loops\": 2\n  }\n}"
+            },
+            "url": {
+              "raw": "{{deep_research_url}}/research/create_research_queue",
+              "host": ["{{deep_research_url}}"],
+              "path": ["research", "create_research_queue"]
+            },
+            "description": "Start a new deep research with queue-based processing (Medium Effort)."
+          },
+          "response": []
+        },
+        {
+          "name": "6c. Create Research Queue (High Effort)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chat\": \"{{chat_id}}\",\n  \"query\": \"Comprehensive analysis of renewable energy adoption trends and challenges in developing countries\",\n  \"config\": {\n    \"query_generator_model\": \"gemini-2.0-flash\",\n    \"reflection_model\": \"gemini-2.0-flash\",\n    \"answer_model\": \"gemini-2.0-flash\",\n    \"number_of_initial_queries\": 3,\n    \"max_research_loops\": 3\n  }\n}"
+            },
+            "url": {
+              "raw": "{{deep_research_url}}/research/create_research_queue",
+              "host": ["{{deep_research_url}}"],
+              "path": ["research", "create_research_queue"]
+            },
+            "description": "Start a new deep research with queue-based processing (High Effort)."
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Job Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{deep_research_url}}/research/job/{{job_id}}/status",
+              "host": ["{{deep_research_url}}"],
+              "path": ["research", "job", "{{job_id}}", "status"]
+            },
+            "description": "Check the status of a research job.\n\n**Job Status Values:**\n- `waiting`: Job is queued\n- `active`: Job is being processed\n- `completed`: Job finished successfully\n- `failed`: Job failed"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"jobId\": \"job-123456\",\n  \"status\": \"completed\",\n  \"progress\": {\n    \"events\": [\n      {\"step\": \"generating_queries\", \"timestamp\": \"...\"},\n      {\"step\": \"web_search\", \"timestamp\": \"...\"},\n      {\"step\": \"completed\", \"timestamp\": \"...\"}\n    ]\n  },\n  \"result\": {\n    \"_id\": \"res-123\",\n    \"query\": \"What are the latest developments in climate change?\",\n    \"result\": \"Based on the research...\",\n    \"sources\": [...],\n    \"images\": [...]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "8. Get Queue Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{deep_research_url}}/research/queue/stats",
+              "host": ["{{deep_research_url}}"],
+              "path": ["research", "queue", "stats"]
+            },
+            "description": "Get statistics about the research queue."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"research\": {\n    \"waiting\": 0,\n    \"active\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "9. Get Chat Researches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{deep_research_url}}/research/get_chat_researches/{{chat_id}}",
+              "host": ["{{deep_research_url}}"],
+              "path": ["research", "get_chat_researches", "{{chat_id}}"]
+            },
+            "description": "Get all completed researches for a specific chat."
+          },
+          "response": []
+        },
+        {
+          "name": "10. Simulate Research (Demo Mode)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chatId\": \"simulation-demo-123\"\n}"
+            },
+            "url": {
+              "raw": "{{deep_research_url}}/research/simulate_research",
+              "host": ["{{deep_research_url}}"],
+              "path": ["research", "simulate_research"]
+            },
+            "description": "Run a research simulation for demonstration purposes.\n\n**⚠️ SSE STREAMING ENDPOINT:** This endpoint returns Server-Sent Events."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Basic Research APIs",
+      "description": "Basic research APIs with streaming responses",
+      "item": [
+        {
+          "name": "11. Basic Research Query (Web)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Note: lowercase 'authorization' is required"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"What is quantum computing and how does it work?\"\n    }\n  ],\n  \"model\": \"shothik-brain-1.0\",\n  \"group\": \"web\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/research",
+              "host": ["{{api_url}}"],
+              "path": ["research"]
+            },
+            "description": "Perform a basic research query with streaming response.\n\n**Models:**\n- `shothik-brain-1.0` (default)\n\n**Groups:**\n- `web` - General web search\n- `academic` - Academic/scholarly sources\n\n**⚠️ STREAMING ENDPOINT:** This endpoint returns a streaming response."
+          },
+          "response": []
+        },
+        {
+          "name": "11b. Basic Research Query (Academic)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Recent research papers on machine learning in healthcare\"\n    }\n  ],\n  \"model\": \"shothik-brain-1.0\",\n  \"group\": \"academic\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/research",
+              "host": ["{{api_url}}"],
+              "path": ["research"]
+            },
+            "description": "Perform research query focused on academic/scholarly sources."
+          },
+          "response": []
+        },
+        {
+          "name": "12. Get Trending Queries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/research/trending-queries",
+              "host": ["{{api_url}}"],
+              "path": ["research", "trending-queries"]
+            },
+            "description": "Get trending research queries."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\"text\": \"Latest AI developments 2025\", \"category\": \"Technology\"},\n    {\"text\": \"Climate change solutions\", \"category\": \"Environment\"},\n    {\"text\": \"Global economic outlook\", \"category\": \"Finance\"}\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "13. Get Suggested Questions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"history\": \"Climate change is affecting global temperatures and weather patterns. Rising sea levels and extreme weather events are becoming more common.\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/research/questions",
+              "host": ["{{api_url}}"],
+              "path": ["research", "questions"]
+            },
+            "description": "Get suggested follow-up questions based on research history."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    \"What are the main contributors to climate change?\",\n    \"How can renewable energy help mitigate climate change?\",\n    \"What are the economic impacts of climate change?\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "14. Get Research Metadata",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"quantum computing\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/research/meta",
+              "host": ["{{api_url}}"],
+              "path": ["research", "meta"]
+            },
+            "description": "Get metadata about a research topic."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"topic\": \"Quantum Computing\",\n    \"relatedTopics\": [\"Quantum Physics\", \"Computer Science\", \"Cryptography\"],\n    \"keyTerms\": [\"qubit\", \"superposition\", \"entanglement\"]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script for all requests",
+          "// Note: SSE streaming endpoints may not work correctly in Postman",
+          "// Use curl for testing streaming endpoints"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "// Store chat_id from create chat response",
+          "if (pm.request.url.toString().includes('create_chat')) {",
+          "    try {",
+          "        var jsonData = pm.response.json();",
+          "        if (jsonData._id) {",
+          "            pm.collectionVariables.set('chat_id', jsonData._id);",
+          "        }",
+          "    } catch (e) {}",
+          "}"
+        ]
+      }
+    }
+  ]
+}
+

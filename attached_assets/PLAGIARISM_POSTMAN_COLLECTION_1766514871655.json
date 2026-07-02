@@ -1,0 +1,306 @@
+{
+  "info": {
+    "_postman_id": "plagiarism-service-2025",
+    "name": "Shothik AI - Plagiarism Detection Service",
+    "description": "Complete API collection for Shothik AI Plagiarism Detection Service including text analysis, file upload, PDF export, and plagiarism reporting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "shothik-ai-plagiarism"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "check_base",
+      "value": "https://api-qa.shothik.ai/check",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    },
+    {
+      "key": "analysis_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Plagiarism Analysis",
+      "item": [
+        {
+          "name": "Analyze Text (Basic)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Save analysis ID for later use",
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.analysisId) {",
+                  "        pm.collectionVariables.set('analysis_id', jsonData.analysisId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Optional - can work without auth"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence has revolutionized modern technology. Machine learning algorithms enable computers to learn from data without explicit programming. Deep learning, a subset of machine learning, uses neural networks with multiple layers to process complex patterns in large datasets.\"\n}"
+            },
+            "url": {
+              "raw": "{{check_base}}/plagiarism/analyze",
+              "host": ["{{check_base}}"],
+              "path": ["plagiarism", "analyze"]
+            },
+            "description": "Analyze text for plagiarism with basic settings. Returns similarity score, matched sections, and sources."
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze Text (Full)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.analysisId) {",
+                  "        pm.collectionVariables.set('analysis_id', jsonData.analysisId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Climate change represents one of the most pressing challenges facing humanity in the 21st century. Rising global temperatures are causing widespread environmental disruption, including melting ice caps, rising sea levels, and more frequent extreme weather events. Scientists warn that immediate action is necessary to mitigate these effects and prevent catastrophic consequences for future generations.\",\n  \"options\": {\n    \"analysisType\": \"full\",\n    \"maxChunks\": 50,\n    \"sourcesPerChunk\": 10\n  }\n}"
+            },
+            "url": {
+              "raw": "{{check_base}}/plagiarism/analyze",
+              "host": ["{{check_base}}"],
+              "path": ["plagiarism", "analyze"]
+            },
+            "description": "Analyze text with full analysis options including custom chunk size and sources per chunk."
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze Text (Deep)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"The theory of relativity, developed by Albert Einstein, fundamentally changed our understanding of space and time. Special relativity introduced the concept that the speed of light is constant in all inertial frames, while general relativity described gravity as a curvature of spacetime caused by mass and energy.\",\n  \"options\": {\n    \"analysisType\": \"deep\",\n    \"maxChunks\": 100,\n    \"sourcesPerChunk\": 15\n  }\n}"
+            },
+            "url": {
+              "raw": "{{check_base}}/plagiarism/analyze",
+              "host": ["{{check_base}}"],
+              "path": ["plagiarism", "analyze"]
+            },
+            "description": "Deep analysis with maximum thoroughness - checks more sources and provides detailed matching."
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze File",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.analysisId) {",
+                  "        pm.collectionVariables.set('analysis_id', jsonData.analysisId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/document.docx",
+                  "description": "Document file (.txt, .doc, .docx, .pdf)"
+                },
+                {
+                  "key": "options",
+                  "value": "{\"analysisType\":\"full\",\"maxChunks\":50}",
+                  "type": "text",
+                  "description": "Optional analysis settings as JSON string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{check_base}}/plagiarism/analyze-file",
+              "host": ["{{check_base}}"],
+              "path": ["plagiarism", "analyze-file"]
+            },
+            "description": "Upload and analyze document files (.txt, .doc, .docx, .pdf) for plagiarism. Text is automatically extracted from the file."
+          },
+          "response": []
+        }
+      ],
+      "description": "Core plagiarism detection APIs for analyzing text and files"
+    },
+    {
+      "name": "Reports & Export",
+      "item": [
+        {
+          "name": "Download PDF Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{check_base}}/plagiarism/analysis/{{analysis_id}}/pdf",
+              "host": ["{{check_base}}"],
+              "path": ["plagiarism", "analysis", "{{analysis_id}}", "pdf"]
+            },
+            "description": "Download plagiarism analysis report as PDF. Requires analysis ID from previous scan."
+          },
+          "response": []
+        }
+      ],
+      "description": "Export and download plagiarism reports in various formats"
+    },
+    {
+      "name": "Cache Management",
+      "item": [
+        {
+          "name": "Get Cached Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cache/plagiarism/:cacheKey",
+              "host": ["{{base_url}}"],
+              "path": ["cache", "plagiarism", ":cacheKey"],
+              "variable": [
+                {
+                  "key": "cacheKey",
+                  "value": "normalized_text_hash",
+                  "description": "Cache key (normalized text hash)"
+                }
+              ]
+            },
+            "description": "Get cached plagiarism report (client-side implementation). Cache key is generated from normalized text."
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Cache",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cache/plagiarism",
+              "host": ["{{base_url}}"],
+              "path": ["cache", "plagiarism"]
+            },
+            "description": "Clear all plagiarism report cache (client-side implementation)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Client-side cache management for plagiarism reports"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// You can add pre-request scripts here",
+          "// For example, refresh token if expired"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test scripts",
+          "pm.test('Status code is 200', function () {",
+          "    pm.response.to.have.status(200);",
+          "});"
+        ]
+      }
+    }
+  ]
+}

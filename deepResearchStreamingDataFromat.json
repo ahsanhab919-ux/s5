@@ -1,0 +1,269 @@
+{
+    "step": "queued",
+    "data": {
+        "jobId": "research-1765187240658-1rvcldj60",
+        "connectionId": "conn_1765187240658_hbor0do9b",
+        "title": "Research Queued",
+        "message": "Your research request has been queued for processing",
+        "position": 0
+    },
+    "timestamp": "2025-12-08T09:47:20.669Z"
+}{
+    "step": "generate_query",
+    "data": {
+        "title": "Generating Search Queries",
+        "message": "Creating optimized search queries for research"
+    },
+    "timestamp": "2025-12-08T09:47:25.888Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "generate_query",
+    "data": {
+        "search_query": [
+            "intermittent fasting longevity \"clinical trial\" OR \"meta-analysis\" OR \"systematic review\" 2023-2025"
+        ],
+        "title": "Search Queries Generated",
+        "message": "Generated 1 search queries"
+    },
+    "timestamp": "2025-12-08T09:47:27.022Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "web_research",
+    "data": {
+        "title": "Web Research",
+        "message": "Starting web research for generated queries"
+    },
+    "timestamp": "2025-12-08T09:47:27.025Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "web_research",
+    "data": {
+        "sources_gathered": [
+            {
+                "url": "https://apcz.umk.pl/QS/article/view/57195",
+                "title": "apcz.umk.pl",
+                "resolved_url": "https://vertexaisearch.cloud.google.com/id/query_0-0",
+                "original_url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqG5KfLrOmbKumHSbCPmUtyvkMKS8ntlTEQLRUPvnYFcdmg8DYm5lmxp2rdcRlMdkuGvYpQCLyztkXgkFcqcvfVcHogEv9lrXC1U-EQaJmGdwnaCSIExT_a6BRIy_zwOR8OMyx"
+            }
+        ],
+        "title": "Web Research Complete",
+        "message": "Gathered 63 sources from web research"
+    },
+    "timestamp": "2025-12-08T09:47:44.404Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "reflection",
+    "data": {
+        "title": "Reflection",
+        "message": "Analyzing research results and identifying gaps"
+    },
+    "timestamp": "2025-12-08T09:47:44.408Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "reflection",
+    "data": {
+        "title": "Reflection Complete",
+        "message": "Research analysis complete. Sufficient: false",
+        "is_sufficient": false,
+        "knowledge_gap": "The initial search focuses on retrieving studies (clinical trials, meta-analyses, systematic reviews) on intermittent fasting and longevity from 2023-2025. However, it doesn't specify which types of intermittent fasting are being considered (e.g., time-restricted eating, alternate-day fasting, 5:2 diet). The effects of different intermittent fasting protocols on longevity may vary. Also, the search doesn't specify the populations being studied (e.g., healthy adults, obese individuals, individuals with specific diseases).",
+        "follow_up_queries": [
+            "What are the different types of intermittent fasting protocols (e.g., time-restricted eating, alternate-day fasting, 5:2 diet) and how do their effects on longevity differ based on recent clinical trials, meta-analyses, or systematic reviews (2023-2025)?",
+            "What are the effects of intermittent fasting on longevity in different populations (e.g., healthy adults, obese individuals, individuals with specific diseases) based on recent clinical trials, meta-analyses, or systematic reviews (2023-2025)?"
+        ]
+    },
+    "timestamp": "2025-12-08T09:47:46.670Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "web_research",
+    "data": {
+        "title": "Web Research",
+        "message": "Starting web research for generated queries"
+    },
+    "timestamp": "2025-12-08T09:47:46.673Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "web_research",
+    "data": {
+        "sources_gathered": [
+            {
+                "url": "https://apcz.umk.pl/QS/article/view/57195",
+                "title": "apcz.umk.pl",
+                "resolved_url": "https://vertexaisearch.cloud.google.com/id/query_0-0",
+                "original_url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFBDq5TezZlm4XNROwvQdHBUEDLkQxuNbG3QYxNBMt6nDSkTxDcXT7fz3opdcNtWJi_DwPv2cmYcJGPxY7gUQAsbylLMLIaeIZiA_cG0Wbs-5_tgkRVfNja0CecLtgSSRIRlNQ="
+            }
+        ],
+        "title": "Web Research Complete",
+        "message": "Gathered 89 sources from web research"
+    },
+    "timestamp": "2025-12-08T09:48:07.675Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "reflection",
+    "data": {
+        "title": "Reflection",
+        "message": "Analyzing research results and identifying gaps"
+    },
+    "timestamp": "2025-12-08T09:48:07.683Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "reflection",
+    "data": {
+        "title": "Reflection Complete",
+        "message": "Research analysis complete. Sufficient: false",
+        "is_sufficient": false,
+        "knowledge_gap": "The summaries mention different populations and intermittent fasting protocols, but lack specifics on the underlying mechanisms by which intermittent fasting might affect longevity. Understanding these mechanisms is crucial for interpreting the results of clinical trials and meta-analyses.",
+        "follow_up_queries": [
+            "What are the proposed biological mechanisms by which different intermittent fasting protocols (e.g., time-restricted eating, alternate-day fasting, 5:2 diet) may influence longevity, focusing on recent research (2023-2025) on cellular processes like autophagy, inflammation, and metabolic regulation?",
+            "How do the effects of intermittent fasting on these biological mechanisms differ across various populations (e.g., healthy adults, obese individuals, individuals with specific diseases) based on recent studies (2023-2025)?"
+        ]
+    },
+    "timestamp": "2025-12-08T09:48:09.269Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "web_research",
+    "data": {
+        "title": "Web Research",
+        "message": "Starting web research for generated queries"
+    },
+    "timestamp": "2025-12-08T09:48:09.273Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "web_research",
+    "data": {
+        "sources_gathered": [
+            {
+                "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12250775/",
+                "title": "pmc.ncbi.nlm.nih.gov",
+                "resolved_url": "https://vertexaisearch.cloud.google.com/id/query_0-0",
+                "original_url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnKcsyNZuprRC8GuL5He1TS-fb9Mv2n88ulKXqjsTQWYoCtGBLhRcGVIfZ946yQGM97-5Vjmj8EhTXq6ItgGbJgV9679s_jhmjnFLVObTljwDlE1mFpnonD-qxD4wD6_mMG2BQt57PdAaj_Fw="
+            }
+        ],
+        "title": "Web Research Complete",
+        "message": "Gathered 161 sources from web research"
+    },
+    "timestamp": "2025-12-08T09:48:32.871Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "reflection",
+    "data": {
+        "title": "Reflection",
+        "message": "Analyzing research results and identifying gaps"
+    },
+    "timestamp": "2025-12-08T09:48:32.890Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "reflection",
+    "data": {
+        "title": "Reflection Complete",
+        "message": "Research analysis complete. Sufficient: false",
+        "is_sufficient": false,
+        "knowledge_gap": "The summaries outline the intention to research biological mechanisms and population-specific effects, but they don't address the specific intermittent fasting protocols being investigated. Knowing which protocols (e.g., 16/8, 5:2, alternate-day fasting) are being studied is crucial for understanding the context of the findings.",
+        "follow_up_queries": [
+            "In recent studies (2023-2025) on intermittent fasting and longevity, which specific intermittent fasting protocols (e.g., 16/8, 5:2, alternate-day fasting) are most frequently investigated, and why?"
+        ]
+    },
+    "timestamp": "2025-12-08T09:48:34.117Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "finalize_answer",
+    "data": {
+        "title": "Finalizing Answer",
+        "message": "Composing and presenting the final research answer"
+    },
+    "timestamp": "2025-12-08T09:48:34.124Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "finalize_answer",
+    "data": {
+        "title": "Research Complete",
+        "message": "Final research answer has been composed and finalized",
+        "final_answer": "### Intermittent Fasting and Longevity: A Comprehensive Review of Recent Studies\n\n**Introduction**\n\nIntermittent fasting (IF) has gained considerable attention in recent years as a dietary strategy with potential benefits for weight management, metabolic health, and even longevity [26, 23, 24]. IF involves cycling between periods of eating and voluntary fasting on a regular schedule [15]. Different IF regimens exist, including alternate-day fasting, whole-day fasting, and time-restricted feeding [15, 11]. While the precise mechanisms underlying the effects of IF are still being elucidated, research suggests that IF can influence various cellular and molecular pathways linked to aging and age-related diseases [4, 10]. This review aims to provide a comprehensive overview of recent studies investigating the relationship between intermittent fasting and longevity, exploring the potential mechanisms involved, the different types of IF, and the current state of evidence.\n\n**Mechanisms Linking Intermittent Fasting to Longevity**\n\nSeveral molecular mechanisms have been proposed to explain how intermittent fasting may contribute to increased lifespan and healthspan. These include:\n\n*   **Autophagy:** Autophagy is a cellular process involving the degradation and recycling of damaged or dysfunctional cellular components [4, 5]. It acts as a cellular cleaning mechanism, removing misfolded proteins and damaged organelles, which can accumulate with age and contribute to age-related diseases [4, 10]. Studies suggest that IF can stimulate autophagy, promoting cellular health and potentially extending lifespan [4, 5, 10].\n\n*   **Reduced Oxidative Stress and Inflammation:** Oxidative stress and chronic inflammation are hallmarks of aging and are implicated in the development of many age-related diseases [14]. IF has been shown to reduce oxidative stress by decreasing the production of reactive oxygen species (ROS) and enhancing antioxidant defenses [14]. Additionally, IF can modulate inflammatory pathways, leading to lower levels of pro-inflammatory cytokines [14].\n\n*   **Improved Insulin Sensitivity and Glucose Metabolism:** Insulin resistance and impaired glucose metabolism are common features of aging and are associated with an increased risk of type 2 diabetes, cardiovascular disease, and other age-related conditions [17]. IF has been shown to improve insulin sensitivity and glucose metabolism, potentially by reducing body weight and visceral fat, and by modulating the expression of genes involved in glucose homeostasis [17].\n\n*   **Hormetic Response:** The concept of hormesis suggests that mild stress can induce adaptive responses that enhance cellular resilience and promote longevity [18]. IF can be considered a mild stressor that triggers a hormetic response, activating cellular defense mechanisms and improving overall health [18].\n\n*   **Modulation of Growth Factors:** Studies have shown that IF can affect the levels of growth factors like insulin-like growth factor 1 (IGF-1), which is involved in cell growth and proliferation [17]. Reducing IGF-1 signaling has been linked to increased lifespan in various organisms [17]. IF may also influence other growth factors and signaling pathways involved in aging [17].\n\n**Types of Intermittent Fasting and Their Effects on Longevity**\n\nSeveral different IF protocols exist, each with its own specific schedule of eating and fasting. The most common types include:\n\n*   **Time-Restricted Feeding (TRF):** TRF involves limiting the daily eating window to a specific number of hours, typically 8-12 hours, and fasting for the remaining hours [11]. For example, an 8-hour eating window might involve consuming all meals between 10 am and 6 pm, followed by a 16-hour fast [11].\n\n*   **Alternate-Day Fasting (ADF):** ADF involves alternating between days of normal eating and days of either complete fasting or severely restricted calorie intake (e.g., 500-600 calories) [14].\n\n*   **Whole-Day Fasting:** This involves fasting for one or two non-consecutive days per week, while eating normally on the other days [15].\n\nThe effects of different IF protocols on longevity may vary depending on factors such as the duration and frequency of fasting, the overall dietary composition, and individual characteristics [15].\n\n**Recent Studies on Intermittent Fasting and Longevity**\n\nRecent studies have continued to explore the potential benefits of intermittent fasting on longevity and age-related health outcomes.\n\n*   A study published in *Frontiers in Public Health* [15] reviewed the effects of different intermittent fasting regimens on various health markers. The review highlighted the potential of IF to improve metabolic health, reduce inflammation, and promote cellular repair through autophagy.\n\n*   Research featured on *The Brighter Side News* [3] suggests that intermittent fasting's anti-aging effects are linked to cellular cleansing processes.\n\n*   A study in *Nutrition Reviews* [20] examined the effects of time-restricted eating on weight management and metabolic health. The study found that TRF can be an effective strategy for weight loss and improving insulin sensitivity, which are both important factors for healthy aging.\n\n*   A study published in the *Cyprus Journal of Medical Sciences* [22] investigated the effects of intermittent fasting on body composition and metabolic parameters in overweight and obese individuals. The results showed that IF led to significant reductions in body weight, body fat, and waist circumference, as well as improvements in blood pressure and lipid profiles.\n\n*   A study published in *Medical Science Monitor* [26] suggests that intermittent fasting can improve overall health.\n\n**Specific Examples and Case Studies**\n\nWhile much of the research on IF and longevity has been conducted in animal models, some human studies have provided promising results. For example, a study on alternate-day fasting in healthy, non-obese humans found improvements in physiological and molecular markers of aging [14]. These markers included reduced oxidative stress, improved insulin sensitivity, and increased levels of brain-derived neurotrophic factor (BDNF), a protein that supports brain health [14].\n\n**Current Trends and Future Implications**\n\nThe field of intermittent fasting research is rapidly evolving, with ongoing studies exploring the long-term effects of IF on various health outcomes, including longevity. Future research is likely to focus on:\n\n*   Identifying the optimal IF protocols for different individuals and populations.\n*   Elucidating the precise molecular mechanisms underlying the effects of IF.\n*   Investigating the potential of IF as a therapeutic intervention for age-related diseases.\n*   Examining the effects of IF in combination with other lifestyle interventions, such as exercise and healthy diet.\n\n**Cautions and Considerations**\n\nWhile intermittent fasting appears to offer several potential health benefits, it is important to note that it may not be suitable for everyone [31]. Certain individuals, such as pregnant or breastfeeding women, people with a history of eating disorders, and those with certain medical conditions, should consult with a healthcare professional before starting an IF regimen [31]. Additionally, it is important to ensure adequate nutrient intake during the eating periods to avoid nutritional deficiencies [31].\n\n**Conclusion**\n\nIntermittent fasting is a promising dietary strategy that may promote longevity and healthy aging by modulating various cellular and molecular pathways, including autophagy, oxidative stress, inflammation, and insulin sensitivity [4, 14, 17]. Recent studies have provided further evidence supporting the potential benefits of IF on metabolic health, weight management, and overall well-being [15, 20, 22, 26]. While more research is needed to fully understand the long-term effects of IF and to identify the optimal protocols for different individuals, the current evidence suggests that IF may be a valuable tool for promoting healthy aging and extending lifespan.\n",
+        "sources_count": 31
+    },
+    "timestamp": "2025-12-08T09:48:49.091Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "image_search",
+    "data": {
+        "title": "Image Search",
+        "message": "Searching for relevant images to enhance research"
+    },
+    "timestamp": "2025-12-08T09:48:49.098Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "image_search",
+    "data": {
+        "title": "Image Search Complete",
+        "message": "Found 5 relevant images for research",
+        "images_found": 5,
+        "images": [
+            {
+                "url": "https://m.media-amazon.com/images/I/71GqQvM+2QL._AC_UF1000,1000_QL80_.jpg",
+                "title": "Weight Loss for Women over 50 Box set: Intermittent Fasting for ...",
+                "source": "www.amazon.com",
+                "alt_text": "Weight Loss for Women over 50 Box set: Intermittent Fasting for ...",
+                "thumbnail_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYw4jyvIYyyNdVR_7Cf8iEuBDlvDE4TX70GYjNE0-tTUYxgc7qnMUSAsw&s",
+                "width": 667,
+                "height": 1000,
+                "context_url": "https://www.amazon.com/Weight-Loss-Women-over-Box/dp/B0D3LXZTT7",
+                "relevance_score": 1
+            }
+        ]
+    },
+    "timestamp": "2025-12-08T09:48:49.794Z",
+    "researchId": "69369ead0ffeff68d69a0d3b"
+}{
+    "step": "completed",
+    "data": {
+        "chat": "69369ea40ffeff68d69a0d38",
+        "query": "Find all recent studies on intermittent fasting and longevity",
+        "result": "### Intermittent Fasting and Longevity: A Comprehensive Review of Recent Studies\n\n**Introduction**\n\nIntermittent fasting (IF) has gained considerable attention in recent years as a dietary strategy with potential benefits for weight management, metabolic health, and even longevity [26, 23, 24]. IF involves cycling between periods of eating and voluntary fasting on a regular schedule [15]. Different IF regimens exist, including alternate-day fasting, whole-day fasting, and time-restricted feeding [15, 11]. While the precise mechanisms underlying the effects of IF are still being elucidated, research suggests that IF can influence various cellular and molecular pathways linked to aging and age-related diseases [4, 10]. This review aims to provide a comprehensive overview of recent studies investigating the relationship between intermittent fasting and longevity, exploring the potential mechanisms involved, the different types of IF, and the current state of evidence.\n\n**Mechanisms Linking Intermittent Fasting to Longevity**\n\nSeveral molecular mechanisms have been proposed to explain how intermittent fasting may contribute to increased lifespan and healthspan. These include:\n\n*   **Autophagy:** Autophagy is a cellular process involving the degradation and recycling of damaged or dysfunctional cellular components [4, 5]. It acts as a cellular cleaning mechanism, removing misfolded proteins and damaged organelles, which can accumulate with age and contribute to age-related diseases [4, 10]. Studies suggest that IF can stimulate autophagy, promoting cellular health and potentially extending lifespan [4, 5, 10].\n\n*   **Reduced Oxidative Stress and Inflammation:** Oxidative stress and chronic inflammation are hallmarks of aging and are implicated in the development of many age-related diseases [14]. IF has been shown to reduce oxidative stress by decreasing the production of reactive oxygen species (ROS) and enhancing antioxidant defenses [14]. Additionally, IF can modulate inflammatory pathways, leading to lower levels of pro-inflammatory cytokines [14].\n\n*   **Improved Insulin Sensitivity and Glucose Metabolism:** Insulin resistance and impaired glucose metabolism are common features of aging and are associated with an increased risk of type 2 diabetes, cardiovascular disease, and other age-related conditions [17]. IF has been shown to improve insulin sensitivity and glucose metabolism, potentially by reducing body weight and visceral fat, and by modulating the expression of genes involved in glucose homeostasis [17].\n\n*   **Hormetic Response:** The concept of hormesis suggests that mild stress can induce adaptive responses that enhance cellular resilience and promote longevity [18]. IF can be considered a mild stressor that triggers a hormetic response, activating cellular defense mechanisms and improving overall health [18].\n\n*   **Modulation of Growth Factors:** Studies have shown that IF can affect the levels of growth factors like insulin-like growth factor 1 (IGF-1), which is involved in cell growth and proliferation [17]. Reducing IGF-1 signaling has been linked to increased lifespan in various organisms [17]. IF may also influence other growth factors and signaling pathways involved in aging [17].\n\n**Types of Intermittent Fasting and Their Effects on Longevity**\n\nSeveral different IF protocols exist, each with its own specific schedule of eating and fasting. The most common types include:\n\n*   **Time-Restricted Feeding (TRF):** TRF involves limiting the daily eating window to a specific number of hours, typically 8-12 hours, and fasting for the remaining hours [11]. For example, an 8-hour eating window might involve consuming all meals between 10 am and 6 pm, followed by a 16-hour fast [11].\n\n*   **Alternate-Day Fasting (ADF):** ADF involves alternating between days of normal eating and days of either complete fasting or severely restricted calorie intake (e.g., 500-600 calories) [14].\n\n*   **Whole-Day Fasting:** This involves fasting for one or two non-consecutive days per week, while eating normally on the other days [15].\n\nThe effects of different IF protocols on longevity may vary depending on factors such as the duration and frequency of fasting, the overall dietary composition, and individual characteristics [15].\n\n**Recent Studies on Intermittent Fasting and Longevity**\n\nRecent studies have continued to explore the potential benefits of intermittent fasting on longevity and age-related health outcomes.\n\n*   A study published in *Frontiers in Public Health* [15] reviewed the effects of different intermittent fasting regimens on various health markers. The review highlighted the potential of IF to improve metabolic health, reduce inflammation, and promote cellular repair through autophagy.\n\n*   Research featured on *The Brighter Side News* [3] suggests that intermittent fasting's anti-aging effects are linked to cellular cleansing processes.\n\n*   A study in *Nutrition Reviews* [20] examined the effects of time-restricted eating on weight management and metabolic health. The study found that TRF can be an effective strategy for weight loss and improving insulin sensitivity, which are both important factors for healthy aging.\n\n*   A study published in the *Cyprus Journal of Medical Sciences* [22] investigated the effects of intermittent fasting on body composition and metabolic parameters in overweight and obese individuals. The results showed that IF led to significant reductions in body weight, body fat, and waist circumference, as well as improvements in blood pressure and lipid profiles.\n\n*   A study published in *Medical Science Monitor* [26] suggests that intermittent fasting can improve overall health.\n\n**Specific Examples and Case Studies**\n\nWhile much of the research on IF and longevity has been conducted in animal models, some human studies have provided promising results. For example, a study on alternate-day fasting in healthy, non-obese humans found improvements in physiological and molecular markers of aging [14]. These markers included reduced oxidative stress, improved insulin sensitivity, and increased levels of brain-derived neurotrophic factor (BDNF), a protein that supports brain health [14].\n\n**Current Trends and Future Implications**\n\nThe field of intermittent fasting research is rapidly evolving, with ongoing studies exploring the long-term effects of IF on various health outcomes, including longevity. Future research is likely to focus on:\n\n*   Identifying the optimal IF protocols for different individuals and populations.\n*   Elucidating the precise molecular mechanisms underlying the effects of IF.\n*   Investigating the potential of IF as a therapeutic intervention for age-related diseases.\n*   Examining the effects of IF in combination with other lifestyle interventions, such as exercise and healthy diet.\n\n**Cautions and Considerations**\n\nWhile intermittent fasting appears to offer several potential health benefits, it is important to note that it may not be suitable for everyone [31]. Certain individuals, such as pregnant or breastfeeding women, people with a history of eating disorders, and those with certain medical conditions, should consult with a healthcare professional before starting an IF regimen [31]. Additionally, it is important to ensure adequate nutrient intake during the eating periods to avoid nutritional deficiencies [31].\n\n**Conclusion**\n\nIntermittent fasting is a promising dietary strategy that may promote longevity and healthy aging by modulating various cellular and molecular pathways, including autophagy, oxidative stress, inflammation, and insulin sensitivity [4, 14, 17]. Recent studies have provided further evidence supporting the potential benefits of IF on metabolic health, weight management, and overall well-being [15, 20, 22, 26]. While more research is needed to fully understand the long-term effects of IF and to identify the optimal protocols for different individuals, the current evidence suggests that IF may be a valuable tool for promoting healthy aging and extending lifespan.\n",
+        "sources": [
+            {
+                "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12250775/",
+                "title": "pmc.ncbi.nlm.nih.gov",
+                "resolved_url": "https://vertexaisearch.cloud.google.com/id/query_0-0",
+                "reference": 1,
+                "_id": "69369f010ffeff68d69a0d5f"
+            }
+        ],
+        "images": [
+            {
+                "url": "https://m.media-amazon.com/images/I/71GqQvM+2QL._AC_UF1000,1000_QL80_.jpg",
+                "title": "Weight Loss for Women over 50 Box set: Intermittent Fasting for ...",
+                "source": "www.amazon.com",
+                "alt_text": "Weight Loss for Women over 50 Box set: Intermittent Fasting for ...",
+                "thumbnail_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYw4jyvIYyyNdVR_7Cf8iEuBDlvDE4TX70GYjNE0-tTUYxgc7qnMUSAsw&s",
+                "width": 667,
+                "height": 1000,
+                "context_url": "https://www.amazon.com/Weight-Loss-Women-over-Box/dp/B0D3LXZTT7",
+                "relevance_score": 1,
+                "_id": "69369f010ffeff68d69a0d7e"
+            }
+        ],
+        "research_loops": 3,
+        "search_queries": [
+            {
+                "query": "In recent studies (2023-2025) on intermittent fasting and longevity, which specific intermittent fasting protocols (e.g., 16/8, 5:2, alternate-day fasting) are most frequently investigated, and why?",
+                "rationale": "Follow-up research",
+                "_id": "69369f010ffeff68d69a0d83"
+            }
+        ],
+        "config": {
+            "query_generator_model": "gemini-2.0-flash",
+            "reflection_model": "gemini-2.0-flash",
+            "answer_model": "gemini-2.0-flash",
+            "number_of_initial_queries": 3,
+            "max_research_loops": 3
+        },
+        "_id": "69369ead0ffeff68d69a0d3b",
+        "createdAt": "2025-12-08T09:47:25.697Z",
+        "updatedAt": "2025-12-08T09:48:49.820Z",
+        "tokenUsage": {
+            "inputTokens": 6967,
+            "outputTokens": 7726,
+            "model": "gemini-2.0-flash"
+        }
+    },
+    "timestamp": "2025-12-08T09:48:51.731Z"
+}

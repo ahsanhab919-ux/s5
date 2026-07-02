@@ -1,0 +1,927 @@
+{
+  "info": {
+    "_postman_id": "marketing-automation-collection-shothik-v3",
+    "name": "Shothik AI - Marketing Automation APIs",
+    "description": "Complete API collection for Marketing Automation service in Shothik AI v3.\n\nThis service provides comprehensive Meta/Facebook Ads automation including campaign creation, media generation, AI-powered ad copy, messenger inbox, knowledge base management, and analytics.\n\n**Base URL:** https://api-qa.shothik.ai/marketing\n\n**Total APIs:** 67 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-qa.shothik.ai",
+      "type": "string"
+    },
+    {
+      "key": "marketing_url",
+      "value": "https://api-qa.shothik.ai/marketing",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "YOUR_ACCESS_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "project_id",
+      "value": "YOUR_PROJECT_ID",
+      "type": "string"
+    },
+    {
+      "key": "ad_id",
+      "value": "YOUR_AD_ID",
+      "type": "string"
+    },
+    {
+      "key": "page_id",
+      "value": "YOUR_PAGE_ID",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "YOUR_USER_ID",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Project & Analysis",
+      "description": "Project management and URL analysis APIs",
+      "item": [
+        {
+          "name": "1. Get All Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/projects",
+              "host": ["{{marketing_url}}"],
+              "path": ["projects"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Single Project",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/projects/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["projects", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/projects/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["projects", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Analyze URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com/product-page\",\n  \"selectedPlatforms\": [\"facebook\", \"instagram\"]\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/analysis/analyze",
+              "host": ["{{marketing_url}}"],
+              "path": ["analysis", "analyze"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Campaign APIs",
+      "description": "Campaign creation and management APIs",
+      "item": [
+        {
+          "name": "5. Get Initial Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/campaign/initial-suggestions/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "initial-suggestions", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Chat with AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Create a campaign targeting young professionals interested in tech\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/campaign/chat/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "chat", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/campaign/chat-history/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "chat-history", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Clear Chat History",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/campaign/chat-history/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "chat-history", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Save Campaign Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaigns\": [],\n  \"adSets\": [],\n  \"ads\": [],\n  \"personas\": []\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/campaign/data/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "data", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Get Campaign Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/campaign/data/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "data", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Generate Ad Copy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product\": \"Wireless Earbuds\",\n  \"persona\": \"Tech-savvy millennials\",\n  \"awareness_stage\": \"consideration\",\n  \"format\": \"carousel\",\n  \"angle\": \"productivity\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/campaign/generate-ad",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "generate-ad"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12. Improve Ad Copy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentAd\": {\n    \"headline\": \"Current headline\",\n    \"primaryText\": \"Current text\"\n  },\n  \"feedback\": \"Make it more engaging and add urgency\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/campaign/improve-ad/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "improve-ad", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13. Publish Ads to Meta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adIds\": [\"ad_001\", \"ad_002\"],\n  \"pageId\": \"{{page_id}}\",\n  \"adAccountId\": \"act_123456\",\n  \"businessAccountId\": \"business_123\",\n  \"ctasWithUrls\": [{\"cta\": \"LEARN_MORE\", \"url\": \"https://example.com\"}]\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/campaign/publish-ads/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "publish-ads", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14. Search Cities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/campaign/search-cities?q=Dhaka&country=BD",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "search-cities"],
+              "query": [
+                {"key": "q", "value": "Dhaka"},
+                {"key": "country", "value": "BD"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "15. Get Business Pixels",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessAccountId\": \"business_123\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/campaign/pixels",
+              "host": ["{{marketing_url}}"],
+              "path": ["campaign", "pixels"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Media & Creative",
+      "description": "Media generation and creative assets APIs",
+      "item": [
+        {
+          "name": "16. Generate Media for Ad",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/media/generate/{{project_id}}/{{ad_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["media", "generate", "{{project_id}}", "{{ad_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "17. Generate Media Batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adIds\": [\"ad_001\", \"ad_002\", \"ad_003\"]\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/media/generate-batch/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["media", "generate-batch", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "18. Get Voices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/media/voices",
+              "host": ["{{marketing_url}}"],
+              "path": ["media", "voices"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "19. Get Avatars",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/media/avatars?gender=female&age=young",
+              "host": ["{{marketing_url}}"],
+              "path": ["media", "avatars"],
+              "query": [
+                {"key": "gender", "value": "female", "disabled": true},
+                {"key": "age", "value": "young", "disabled": true}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "20. Generate Script",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/media/generate-script/{{project_id}}/{{ad_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["media", "generate-script", "{{project_id}}", "{{ad_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "21. Generate Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"req_123\",\n  \"video_inputs\": [],\n  \"aspect_ratio\": \"16:9\",\n  \"name\": \"Product Ad Video\",\n  \"model_version\": \"aurora_v1\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/media/generate-video",
+              "host": ["{{marketing_url}}"],
+              "path": ["media", "generate-video"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Meta/Facebook",
+      "description": "Meta/Facebook integration APIs",
+      "item": [
+        {
+          "name": "22. Initiate Facebook Auth",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/connect/facebook",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "facebook"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "23. Get User Facebook Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/connect/user-data",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "user-data"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "24. Update Selections",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"selectedPageIds\": [\"page_123\"],\n  \"selectedBusinessAccountId\": \"business_456\",\n  \"selectedAdsAccountId\": \"act_789\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/connect/update-selections",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "update-selections"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "25. Disconnect Facebook",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/connect/facebook",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "facebook"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26. Get Webhook Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/connect/webhook/status/{{page_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "webhook", "status", "{{page_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "27. Subscribe Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/connect/webhook/subscribe",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "webhook", "subscribe"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messenger",
+      "description": "Messenger inbox APIs",
+      "item": [
+        {
+          "name": "28. Get Page Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/connect/messenger/messages/{{page_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "messenger", "messages", "{{page_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "29. Get Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/connect/messenger/conversation/{{page_id}}/sender_123",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "messenger", "conversation", "{{page_id}}", "sender_123"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "30. Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\",\n  \"recipientId\": \"user_456\",\n  \"message\": \"Hello! How can I help you today?\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/connect/messenger/send",
+              "host": ["{{marketing_url}}"],
+              "path": ["connect", "messenger", "send"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Knowledge Base",
+      "description": "Knowledge base management APIs",
+      "item": [
+        {
+          "name": "31. Scrape Website",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\",\n  \"url\": \"https://example.com/faq\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/knowledge/scrape",
+              "host": ["{{marketing_url}}"],
+              "path": ["knowledge", "scrape"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "32. Add Text Knowledge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\",\n  \"title\": \"Product FAQ\",\n  \"content\": \"Q: What is your return policy? A: We offer 30-day returns...\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/knowledge/text",
+              "host": ["{{marketing_url}}"],
+              "path": ["knowledge", "text"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "33. Get Knowledge",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/knowledge/{{page_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["knowledge", "{{page_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "34. Create Custom Tool",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\",\n  \"name\": \"Order Status Checker\",\n  \"description\": \"Check order status by order ID\",\n  \"apiEndpoint\": \"https://api.example.com/orders\",\n  \"method\": \"GET\",\n  \"headers\": \"{}\",\n  \"parameters\": \"{\\\"orderId\\\": \\\"string\\\"}\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/knowledge/tools",
+              "host": ["{{marketing_url}}"],
+              "path": ["knowledge", "tools"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Smart Assets",
+      "description": "Smart assets management APIs",
+      "item": [
+        {
+          "name": "35. Get Assets by Project",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/smart-assets/project/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["smart-assets", "project", "{{project_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "36. Create Smart Asset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"projectId\": \"{{project_id}}\",\n  \"name\": \"Product Hero Image\",\n  \"type\": \"image\",\n  \"imagekitUrl\": \"https://ik.imagekit.io/xxx/image.jpg\",\n  \"imagekitFileId\": \"file_123\",\n  \"fileSize\": 1024000,\n  \"mimeType\": \"image/jpeg\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/smart-assets",
+              "host": ["{{marketing_url}}"],
+              "path": ["smart-assets"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Generation",
+      "description": "AI content generation APIs",
+      "item": [
+        {
+          "name": "37. AI Generate Image/Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"text-to-image\",\n  \"model\": \"flux-pro\",\n  \"prompt\": \"A modern smartphone on a clean white background\",\n  \"aspectRatio\": \"1:1\",\n  \"outputCount\": 4,\n  \"userId\": \"{{user_id}}\",\n  \"projectId\": \"{{project_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/ai-generation/generate",
+              "host": ["{{marketing_url}}"],
+              "path": ["ai-generation", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "38. Generate UGC Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audio\": \"https://example.com/audio.mp3\",\n  \"image\": \"https://example.com/avatar.jpg\",\n  \"name\": \"UGC Ad Video\",\n  \"text_prompt\": \"Speaking about product benefits\",\n  \"model_version\": \"aurora_v1\"\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/ugc-video/generate",
+              "host": ["{{marketing_url}}"],
+              "path": ["ugc-video", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "39. Generate AI Short",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"script\": \"Discover the amazing features of our product...\",\n  \"aspect_ratio\": \"9x16\",\n  \"style\": \"professional\",\n  \"accent\": \"american\",\n  \"caption_setting\": {\"style\": \"minimal\"},\n  \"background_music_volume\": 0.3,\n  \"voiceover_volume\": 1.0,\n  \"metadata\": {\n    \"userId\": \"{{user_id}}\",\n    \"projectId\": \"{{project_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/ai-shorts/generate",
+              "host": ["{{marketing_url}}"],
+              "path": ["ai-shorts", "generate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "ImageKit",
+      "description": "ImageKit storage APIs",
+      "item": [
+        {
+          "name": "40. Get ImageKit Auth",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/imagekit/auth",
+              "host": ["{{marketing_url}}"],
+              "path": ["imagekit", "auth"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "41. Upload to ImageKit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"file\": \"base64_encoded_file_or_url\",\n  \"fileName\": \"image.jpg\",\n  \"folder\": \"/marketing/\",\n  \"useUniqueFileName\": true\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/imagekit/upload",
+              "host": ["{{marketing_url}}"],
+              "path": ["imagekit", "upload"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat & MindMap",
+      "description": "Chat and mindmap APIs",
+      "item": [
+        {
+          "name": "42. Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/chat/history/{{project_id}}?limit=50",
+              "host": ["{{marketing_url}}"],
+              "path": ["chat", "history", "{{project_id}}"],
+              "query": [{"key": "limit", "value": "50"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "43. Send Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What targeting options do you recommend?\",\n  \"projectId\": \"{{project_id}}\",\n  \"conversationHistory\": []\n}"
+            },
+            "url": {
+              "raw": "{{marketing_url}}/chat/message",
+              "host": ["{{marketing_url}}"],
+              "path": ["chat", "message"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "44. Get MindMap",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/projects/{{project_id}}/mindmap",
+              "host": ["{{marketing_url}}"],
+              "path": ["projects", "{{project_id}}", "mindmap"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "45. Get Meta Insights",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {
+              "raw": "{{marketing_url}}/meta/insights/{{project_id}}",
+              "host": ["{{marketing_url}}"],
+              "path": ["meta", "insights", "{{project_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": ["// Pre-request script for all requests"]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "// Store project_id from analyze response",
+          "if (pm.request.url.toString().includes('/analysis/analyze')) {",
+          "    try {",
+          "        var jsonData = pm.response.json();",
+          "        if (jsonData.data?._id) {",
+          "            pm.collectionVariables.set('project_id', jsonData.data._id);",
+          "        }",
+          "    } catch (e) {}",
+          "}"
+        ]
+      }
+    }
+  ]
+}
+

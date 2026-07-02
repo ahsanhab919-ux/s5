@@ -1,0 +1,48 @@
+PaperDebugger is an in-editor, multi‑agent academic writing assistant that lives inside Overleaf via a Chrome extension and performs diagnosis, rewriting, review, and literature retrieval directly on LaTeX documents.[1][2]
+
+## What PaperDebugger does  
+- Provides paragraph‑level diagnosis and automatic rewriting to improve clarity, coherence, and readability of academic text while preserving intent.[3][2]
+- Offers structured review and scoring of papers, highlighting issues in argument flow, organization, and citation usage within the editor.[4][1]
+- Supports literature search and reference lookup as part of the writing flow, so related work and citations can be pulled in without leaving Overleaf.[1][4]
+
+## Overleaf integration  
+- Runs as a Chrome extension that injects UI directly inside Overleaf rather than as a separate web app, enabling in‑place interaction with LaTeX documents.[2][5][1]
+- Synchronizes with document state and revision history to create fine‑grained diffs and Git‑style before/after patches that users can accept or reject.[6][1]
+- Uses a Kubernetes‑native backend plus a Model Context Protocol (MCP/XtraMCP) toolchain to orchestrate specialized agents and tools per document.[7][6][1]
+
+## Core technical ideas  
+- Employs a multi‑agent pipeline (Reviewer, Enhancer, Researcher, Scorer, etc.) that can run in parallel to critique, rewrite, fact‑check, and score sections.[8][1]
+- Maintains secure state management and bidirectional syncing to support localized edits and diff‑based updates instead of blind whole‑file rewrites.[6][1]
+- Exposes a plugin system so new tools (additional scorers, search backends, workflows) can be added without changing the core editor integration.[9][1]
+
+## Getting started  
+- Install the **PaperDebugger BETA** extension from the Chrome Web Store and connect it to Overleaf projects to enable in‑editor assistance.[2]
+- Source code, documentation, website, and the research paper are available under the PaperDebugger GitHub organization.[10][11][1]
+- Early deployments report active use by students and researchers preparing conference and journal submissions, with telemetry summarized in the demo paper.[4][1][6]
+
+## If you want to build something similar  
+- Implement an editor‑integration layer (browser extension or similar) that tracks cursor, selections, and a LaTeX/document model in real time.[5][1]
+- Build a backend orchestration service that runs multi‑agent workflows (review, rewriting, search, scoring) with diffing and literature‑search tools, ideally over an MCP‑style protocol.[9][1][6]
+- Design a minimal, low‑intrusion UI focused on inline suggestions, patch previews, and one‑click application of edits, borrowing from Git‑style workflows developers already understand.[8][1][2]
+
+[1](https://arxiv.org/abs/2512.02589)
+[2](https://chromewebstore.google.com/detail/paperdebugger-beta/gjkgbnnlfophcfffoinfgdnhjnfankbn)
+[3](https://www.paperdebugger.com)
+[4](https://www.emergentmind.com/papers/2512.02589)
+[5](https://www.linkedin.com/posts/angelstanz_ai-academicwriting-multiagentsystems-activity-7402357018675752960-PsER)
+[6](https://chatpaper.com/paper/215426)
+[7](https://www.themoonlight.io/tw/review/paperdebugger-a-plugin-based-multi-agent-system-for-in-editor-academic-writing-review-and-editing)
+[8](https://www.youtube.com/watch?v=vU8foU7V618)
+[9](https://github.com/gauravfs-14/awesome-mcp)
+[10](https://github.com/PaperDebugger)
+[11](https://github.com/PaperDebugger/paperdebugger)
+[12](https://replit.com/@shothikai/reimagined-adventure2-1)
+[13](https://www.reddit.com/r/MachineLearning/comments/1peyxib/r_paperdebugger_the_best_overleaf_companion/)
+[14](https://www.reddit.com/r/LocalLLaMA/comments/1pfq0kd/paperdebugger_the_best_overleaf_companion/)
+[15](https://www.agentsignals.ai/agents/paperdebugger)
+[16](https://www.youtube.com/watch?v=tMi1PgXQeks)
+[17](https://huggingface.co/papers/2512.02589)
+[18](https://www.linkedin.com/posts/bingsheng-he-7734b131_github-paperdebuggerpaperdebugger-paper-activity-7403265272192962560-s88i)
+[19](https://github.com/PaperDebugger/paperdebugger/issues)
+[20](https://github.com/PaperDebugger/paperdebugger/actions/workflows/release.yml)
+[21](https://www.alphaxiv.org/resources/2512.02589)
