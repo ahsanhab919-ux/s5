@@ -13,13 +13,12 @@
 
 ## 🟡 In Progress / To Review
 - **Media Canvas**:
-  - [ ] Review PR #14: Implement download in MediaCanvas
-  - [ ] Review PR #13: Implement media download in MediaCanvasModal
-  - *Note: PR #13 and #14 seem to address similar functionality. Need to determine which one to proceed with.*
-
+    - [x] PR #14: Implement download in MediaCanvas (page-level view rendered by the `/marketing-automation/canvas/[projectId]/media/[adId]` route)
+  - [x] PR #13: MediaCanvasModal — resolved via PR #14. The e2e spec (`e2e/media-canvas-download.spec.ts`) targets the MediaCanvas page, so the download is implemented there; the modal does not need a separate implementation.
+  - *Decision: Proceeded with PR #14 (MediaCanvas). `handleDownload` fetches the media blob and saves it as `{headline}-media-{index}.{ext}` (e.g. `Test Ad-media-1.jpg`), matching the e2e test.*
 - **Documentation**:
-  - [ ] PR #4: Replace academic analysis with developer-focused README
-  - [ ] PR #3: Add docstrings to strengthened types
+    - [x] PR #4: README is developer-focused (Tech Stack, Repo Structure, Getting Started, Env Vars, CI/CD)
+  - [x] PR #3: Add TSDoc docstrings to strengthened types (`src/types/campaign.ts`)
 
 ## 🔴 Priority Issues / Next Steps
 1. **Verify Paraphrase Service**:
