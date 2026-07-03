@@ -1,0 +1,63 @@
+# Production runtime for VPS/container host (hybrid deploy)
+# Images are built & pushed by Cloud Build; this file pulls & runs them.
+# Fill in <project-id> and <your-domain> (or override via .env).
+
+services:
+  web:
+    image: gcr.io/${GCP_PROJECT_ID:-<project-id>}/shothik-web:${IMAGE_TAG:-latest}
+    restart: always
+    env_file:
+      - .env.web.prod
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # In-container the NLP service is reachable by service name, not 127.0.0.1
+      - NLP_SERVICE_URL=http://nlp-service:8080
+    depends_on:
+      - nlp-service
+    expose:
+      - "3000"
+    networks:
+      - shothik
+
+  nlp-service:
+    image: gcr.io/${GCP_PROJECT_ID:-<project-id>}/nlp-inference-service:${IMAGE_TAG:-latest}
+    restart: always
+    env_file:
+      - .env.nlp.prod
+    environment:
+      # Must match the public frontend origin or requests are rejected
+      - ALLOWED_ORIGINS=https://<your-domain>
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - shothik
+
+  proxy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - nlp-service
+    networks:
+      - shothik
+
+networks:
+  shothik:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
