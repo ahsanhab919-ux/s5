@@ -1,6 +1,6 @@
 # Production runtime for VPS/container host (hybrid deploy)
 # Images are built & pushed by Cloud Build; this file pulls & runs them.
-# Fill in <project-id> and <your-domain> (or override via .env).
+# Fill in <project-id> and <your-domain> in the .env.*.prod files (not here).
 
 services:
   web:
@@ -14,7 +14,8 @@ services:
       # In-container the NLP service is reachable by service name, not 127.0.0.1
       - NLP_SERVICE_URL=http://nlp-service:8080
     depends_on:
-      - nlp-service
+      nlp-service:
+        condition: service_healthy
     expose:
       - "3000"
     networks:
@@ -23,11 +24,13 @@ services:
   nlp-service:
     image: gcr.io/${GCP_PROJECT_ID:-<project-id>}/nlp-inference-service:${IMAGE_TAG:-latest}
     restart: always
+    # All config (ALLOWED_ORIGINS, model paths, backend) comes from this file.
     env_file:
       - .env.nlp.prod
-    environment:
-      # Must match the public frontend origin or requests are rejected
-      - ALLOWED_ORIGINS=https://<your-domain>
+    volumes:
+      # Persist downloaded/converted models across restarts & deploys.
+      # Seed once: docker compose run --rm nlp-service python scripts/download_and_convert_models.py
+      - models:/models
     expose:
       - "8080"
     healthcheck:
@@ -35,6 +38,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 60s
     networks:
       - shothik
 
@@ -50,7 +54,6 @@ services:
       - caddy_config:/config
     depends_on:
       - web
-      - nlp-service
     networks:
       - shothik
 
@@ -59,5 +62,6 @@ networks:
     driver: bridge
 
 volumes:
+  models:
   caddy_data:
   caddy_config:
