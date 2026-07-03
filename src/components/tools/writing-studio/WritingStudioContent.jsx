@@ -49,6 +49,7 @@ import {
   FileDown,
   HelpCircle,
   GraduationCap,
+  BookMarked,
 } from "lucide-react";
 import {
   useParaphrasedMutation,
@@ -70,6 +71,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import WritingStudioOnboarding from "./WritingStudioOnboarding";
+import WritingMdPanel from "./components/WritingMdPanel";
 import { 
   WritingStudioUpgradeModal, 
   UsageLimitBanner, 
@@ -887,7 +889,7 @@ export default function WritingStudioContent() {
         <div className="lg:col-span-1">
           <Card className="sticky top-4">
             <Tabs defaultValue="actions" className="w-full">
-              <TabsList className="w-full grid grid-cols-2">
+              <TabsList className="w-full grid grid-cols-3">
                 <TabsTrigger value="actions" className="gap-1" id="writing-studio-ai-tools">
                   <Wand2 className="h-4 w-4" />
                   AI Actions
@@ -895,6 +897,10 @@ export default function WritingStudioContent() {
                 <TabsTrigger value="review" className="gap-1" id="writing-studio-review-tab">
                   <FileSearch className="h-4 w-4" />
                   Review
+                </TabsTrigger>
+                <TabsTrigger value="context" className="gap-1" id="writing-studio-context-tab">
+                  <BookMarked className="h-4 w-4" />
+                  Context
                 </TabsTrigger>
               </TabsList>
 
@@ -1152,6 +1158,14 @@ export default function WritingStudioContent() {
                     <Separator />
 
                     <CitationFormatHelper />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="context" className="m-0">
+                <ScrollArea className="h-[550px]">
+                  <div className="p-4">
+                    <WritingMdPanel />
                   </div>
                 </ScrollArea>
               </TabsContent>

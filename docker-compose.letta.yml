@@ -1,0 +1,55 @@
+# Letta memory server + Postgres/pgvector for Shothik WRITING.md (Phase 1).
+#
+# WRITING.md is stored as a Letta core-memory block on a per-user agent.
+# Letta persists all state to Postgres (with the pgvector extension for
+# archival/semantic memory). See MEMORY-STACK-EVALUATION.md for the rationale.
+#
+# Usage:
+#   docker compose -f docker-compose.letta.yml up -d
+#   # Letta REST API -> http://localhost:8283  (set LETTA_BASE_URL to this)
+#
+# Notes:
+#   - Set your provider key(s) in the environment before `up` (OpenAI shown).
+#     Under BYOK (Phase 2) these become per-user keys injected at agent creation.
+#   - Data persists in the named volumes below.
+
+services:
+  letta-db:
+    image: pgvector/pgvector:pg16
+    container_name: shothik-letta-db
+    environment:
+      POSTGRES_USER: letta
+      POSTGRES_PASSWORD: letta
+      POSTGRES_DB: letta
+    volumes:
+      - letta_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U letta"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  letta:
+    image: letta/letta:latest
+    container_name: shothik-letta
+    depends_on:
+      letta-db:
+        condition: service_healthy
+    ports:
+      - "8283:8283"
+    environment:
+      # Point Letta at the pgvector-enabled Postgres above.
+      LETTA_PG_URI: postgresql://letta:letta@letta-db:5432/letta
+      # Provider key(s). Replace/extend for Anthropic, Gemini, etc.
+      # Under BYOK these are overridden per-user at agent creation time.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Optional: secure the server with a token that the app sends as LETTA_API_KEY.
+      SECURE: ${LETTA_SECURE:-false}
+    volumes:
+      - letta_data:/root/.letta
+    restart: unless-stopped
+
+volumes:
+  letta_pgdata:
+  letta_data:
