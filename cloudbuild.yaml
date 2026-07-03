@@ -1,5 +1,42 @@
+# Cloud Build: build + tag + push both images for hybrid deploy.
+# Runtime (VPS) pulls these via docker-compose.prod.yml.
+# SHORT_SHA is provided by Cloud Build triggers.
+
 steps:
+  # --- Next.js web image ---
   - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/nlp-inference-service', '.' ]
+    id: build-web
+    args:
+      - build
+      - -f
+      - Dockerfile.web
+      - -t
+      - 'gcr.io/$PROJECT_ID/shothik-web:$SHORT_SHA'
+      - -t
+      - 'gcr.io/$PROJECT_ID/shothik-web:latest'
+      - .
+
+  # --- NLP inference service image (root Dockerfile) ---
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-nlp
+    args:
+      - build
+      - -f
+      - Dockerfile
+      - -t
+      - 'gcr.io/$PROJECT_ID/nlp-inference-service:$SHORT_SHA'
+      - -t
+      - 'gcr.io/$PROJECT_ID/nlp-inference-service:latest'
+      - .
+
 images:
-  - 'gcr.io/$PROJECT_ID/nlp-inference-service'
+  - 'gcr.io/$PROJECT_ID/shothik-web:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/shothik-web:latest'
+  - 'gcr.io/$PROJECT_ID/nlp-inference-service:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/nlp-inference-service:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '2400s'
