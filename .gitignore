@@ -31,5 +31,13 @@ ts-debug.log*
 .env.test.local
 .env.production.local
 
+# production env files (real secrets — never commit; keep only *.example)
+.env.web.prod
+.env.nlp.prod
+.env.*.prod
+!.env.web.prod.example
+!.env.nlp.prod.example
+!*.prod.example
+
 # vercel
 .vercel
