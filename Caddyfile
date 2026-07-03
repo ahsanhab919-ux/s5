@@ -1,0 +1,23 @@
+# Caddy reverse proxy for the Shothik production stack.
+# Caddy provisions & renews TLS automatically via Let's Encrypt.
+# Replace <your-domain> with your real domain before deploying.
+
+<your-domain> {
+	encode zstd gzip
+
+	# Everything goes to the Next.js app. Next.js internally rewrites
+	# /api/paraphrase* to the NLP service (see next.config.ts).
+	reverse_proxy web:3000
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# --- Optional: expose the NLP service on its own subdomain ---
+# Uncomment and set ALLOWED_ORIGINS on the nlp-service accordingly.
+# api.<your-domain> {
+# 	encode zstd gzip
+# 	reverse_proxy nlp-service:8080
+# }
