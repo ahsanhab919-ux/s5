@@ -102,6 +102,47 @@ describe('parseRequest — validation', () => {
   });
 });
 
+describe('parseRequest — inline .anchor markers', () => {
+  it('resolves markers to cleaned text + anchor spans', () => {
+    const req = parseRequest({
+      text: 'Revenue was .anchor {$2.3M} last year.',
+      mode: 'review',
+    });
+    expect(req.text).toBe('Revenue was $2.3M last year.');
+    expect(req.anchors).toEqual([{ start: 12, end: 17 }]);
+  });
+
+  it('merges parsed anchors with explicitly-passed anchors (dedup)', () => {
+    const req = parseRequest({
+      text: '.anchor {AAA} tail',
+      mode: 'review',
+      anchors: [{ start: 0, end: 3 }, { start: 4, end: 8 }],
+    });
+    expect(req.text).toBe('AAA tail');
+    // explicit {0,3} equals the parsed anchor -> deduped; explicit {4,8} kept.
+    expect(req.anchors).toEqual([
+      { start: 0, end: 3 },
+      { start: 4, end: 8 },
+    ]);
+  });
+
+  it('threads the CLEANED text into a nudge request', () => {
+    const req = parseRequest({
+      text: 'the .anchor {color} is nice',
+      mode: 'nudge',
+      nudge: { span: { start: 0, end: 3 }, replacement: 'THE', category: 'terminology' },
+    });
+    expect(req.text).toBe('the color is nice');
+    expect(req.nudge!.text).toBe('the color is nice');
+  });
+
+  it('maps a malformed marker to a request error (=> 400)', () => {
+    expect(() => parseRequest({ text: '.anchor {unclosed', mode: 'review' })).toThrow(
+      ReEducatorRequestError,
+    );
+  });
+});
+
 describe('defaultGuards — composition', () => {
   it('always registers readability, links, pii', () => {
     const g = defaultGuards();

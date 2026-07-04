@@ -21,6 +21,7 @@
 
 import type { Issue, IssueCategory, Span } from './types';
 import { STANDARD } from './profiles';
+import { parseAnchors, hasAnchorMarkers, AnchorSyntaxError, type ParsedAnchors } from './anchors';
 import type { LedgerData, LedgerMeta } from './ledger';
 import { genesisHash } from './ledger';
 import type { RegisteredGuard, SemanticReviewer } from './engine';
@@ -253,10 +254,29 @@ export function parseRequest(body: unknown): ReEducatorRequest {
   }
 
   const mode = b.mode as ReEducatorMode;
-  const anchors = parseSpans(b.anchors, 'anchors');
+  const explicitAnchors = parseSpans(b.anchors, 'anchors');
+
+  // Resolve inline `.anchor {...}` markers (spec §7a). If present, the CLEANED
+  // text (markers stripped) becomes the authoritative manuscript, and the parsed
+  // anchor spans (offsets into that cleaned text) are merged with any explicit
+  // anchors the caller also passed. Markers are a convenience layer that resolves
+  // to the exact same frozen-anchor set the engine already consumes.
+  let text = b.text;
+  let anchors = explicitAnchors;
+  if (hasAnchorMarkers(b.text)) {
+    let parsed: ParsedAnchors;
+    try {
+      parsed = parseAnchors(b.text);
+    } catch (e) {
+      if (e instanceof AnchorSyntaxError) throw new ReEducatorRequestError(e.message);
+      throw e;
+    }
+    text = parsed.text;
+    anchors = mergeAnchors(explicitAnchors, parsed.anchors);
+  }
 
   const req: ReEducatorRequest = {
-    text: b.text,
+    text,
     mode,
     anchors,
     writingMdVersion: typeof b.writingMdVersion === 'string' ? b.writingMdVersion : undefined,
@@ -264,13 +284,30 @@ export function parseRequest(body: unknown): ReEducatorRequest {
   };
 
   if (mode === 'nudge') {
-    req.nudge = parseNudge(b.nudge, b.text);
+    // Nudge span offsets are relative to the (possibly cleaned) authoritative text.
+    req.nudge = parseNudge(b.nudge, text);
   }
   if (mode === 'auto') {
     req.auto = parseAuto(b.auto);
   }
 
   return req;
+}
+
+/** Merge two anchor lists, dropping exact duplicates. Order-stable: explicit
+ * anchors first, then parsed ones not already present. The engine treats anchors
+ * as an unordered overlap set, so this is purely for tidy, deterministic output. */
+function mergeAnchors(explicit: Span[], parsed: Span[]): Span[] {
+  const seen = new Set(explicit.map((s) => `${s.start}:${s.end}`));
+  const merged = [...explicit];
+  for (const s of parsed) {
+    const key = `${s.start}:${s.end}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(s);
+    }
+  }
+  return merged;
 }
 
 function parseSpans(value: unknown, field: string): Span[] {
