@@ -7,8 +7,41 @@ import {
     runReEducator,
     ReEducatorRequestError,
     type ReEducatorResult,
+    type GuardOptions,
 } from '@/lib/re-educator/service';
 import { verifyChain, genesisHash } from '@/lib/re-educator/ledger';
+import { readWritingContext } from '@/lib/re-educator/writing-context';
+import { getOrCreateWritingProfile } from '@/lib/writingProfile';
+import { getWritingMd } from '@/lib/letta';
+
+/**
+ * Fetch a user's WRITING.md content, or null if unavailable. Resolves the
+ * user's Letta agent (creating a profile if needed) then reads the block.
+ * Thrown errors are caught upstream by readWritingContext (best-effort).
+ */
+async function fetchWritingMd(userId: string): Promise<string | null> {
+    await dbConnect();
+    const profile = await getOrCreateWritingProfile(userId);
+    if (!profile?.lettaAgentId) return null;
+    const { content } = await getWritingMd(profile.lettaAgentId);
+    return content || null;
+}
+
+/**
+ * Merge WRITING.md-derived guard options with caller-supplied ones. The caller
+ * wins on every field (explicit request beats stored context); WRITING.md only
+ * fills gaps the caller left empty.
+ */
+function mergeGuardOptions(
+    fromContext: GuardOptions,
+    fromCaller: GuardOptions | undefined,
+): GuardOptions {
+    if (!fromCaller) return fromContext;
+    return {
+        terminologyRules: fromCaller.terminologyRules ?? fromContext.terminologyRules,
+        voiceProfile: fromCaller.voiceProfile ?? fromContext.voiceProfile,
+    };
+}
 
 /**
  * POST /api/re-educator
@@ -52,6 +85,16 @@ export async function POST(request: Request) {
 
         // Parse + validate (throws ReEducatorRequestError => 400).
         const req = parseRequest(body);
+        const userId = String(user._id || user.id);
+
+        // Enrich with the user's WRITING.md context (Phase 1 #3). Best-effort:
+        // readWritingContext never throws — if Letta is unreachable or the block
+        // is absent, we get EMPTY_WRITING_CONTEXT and the run proceeds
+        // deterministically. Caller-supplied guardOptions win over WRITING.md;
+        // the caller-supplied writingMdVersion (if any) is respected too.
+        const ctx = await readWritingContext(userId, fetchWritingMd);
+        req.guardOptions = mergeGuardOptions(ctx.guardOptions, req.guardOptions);
+        if (!req.writingMdVersion) req.writingMdVersion = ctx.writingMdVersion;
 
         // Run the engine/modes. Pure, deterministic (no semantic reviewer here).
         const outcome: ReEducatorResult = runReEducator(req);
@@ -76,7 +119,6 @@ export async function POST(request: Request) {
         const profile = mode === 'paraphrase' ? 'paraphrase' : 'standard';
 
         await dbConnect();
-        const userId = String(user._id || user.id);
         const doc = await ReEducatorLedger.create({
             userId,
             mode,
