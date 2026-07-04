@@ -72,6 +72,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import WritingStudioOnboarding from "./WritingStudioOnboarding";
 import WritingMdPanel from "./components/WritingMdPanel";
+import { ReEducatorPanel } from "./components";
 import { 
   WritingStudioUpgradeModal, 
   UsageLimitBanner, 
@@ -889,7 +890,7 @@ export default function WritingStudioContent() {
         <div className="lg:col-span-1">
           <Card className="sticky top-4">
             <Tabs defaultValue="actions" className="w-full">
-              <TabsList className="w-full grid grid-cols-3">
+              <TabsList className="w-full grid grid-cols-4">
                 <TabsTrigger value="actions" className="gap-1" id="writing-studio-ai-tools">
                   <Wand2 className="h-4 w-4" />
                   AI Actions
@@ -897,6 +898,10 @@ export default function WritingStudioContent() {
                 <TabsTrigger value="review" className="gap-1" id="writing-studio-review-tab">
                   <FileSearch className="h-4 w-4" />
                   Review
+                </TabsTrigger>
+                <TabsTrigger value="re-educate" className="gap-1" id="writing-studio-re-educate-tab">
+                  <GraduationCap className="h-4 w-4" />
+                  Re-educate
                 </TabsTrigger>
                 <TabsTrigger value="context" className="gap-1" id="writing-studio-context-tab">
                   <BookMarked className="h-4 w-4" />
@@ -1158,6 +1163,21 @@ export default function WritingStudioContent() {
                     <Separator />
 
                     <CitationFormatHelper />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="re-educate" className="m-0">
+                <ScrollArea className="h-[550px]">
+                  <div className="p-4">
+                    <ReEducatorPanel
+                      initialText={selectedText || editor?.getText() || ""}
+                      onAccept={(revised) => {
+                        if (editor) {
+                          editor.commands.setContent(`<p>${revised}</p>`);
+                        }
+                      }}
+                    />
                   </div>
                 </ScrollArea>
               </TabsContent>
