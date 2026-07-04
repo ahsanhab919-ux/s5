@@ -34,6 +34,9 @@ export interface WritingContext {
   guardOptions: GuardOptions;
   /** Stable tag for the ledger: 'none' when no context, else 'wmd:<hash12>'. */
   writingMdVersion: string;
+  /** Raw WRITING.md content, when present. Passed to the semantic reviewer
+   * (Phase 2 #4) as voice/rules context. Undefined when there is no context. */
+  writingMd?: string;
 }
 
 /** The empty, deterministic-only context. */
@@ -75,7 +78,7 @@ export function parseWritingContext(content: string): WritingContext {
     if (bannedPhrases.length > 0) guardOptions.voiceProfile.bannedPhrases = bannedPhrases;
   }
 
-  return { guardOptions, writingMdVersion: deriveVersionTag(content) };
+  return { guardOptions, writingMdVersion: deriveVersionTag(content), writingMd: content };
 }
 
 /** Split markdown into a map of lowercased H2/H3 heading -> raw body text. */

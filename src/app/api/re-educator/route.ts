@@ -10,6 +10,7 @@ import {
     type GuardOptions,
 } from '@/lib/re-educator/service';
 import { verifyChain, genesisHash } from '@/lib/re-educator/ledger';
+import { reviewerFromByok, type ByokRequest } from '@/lib/re-educator/byok';
 import { readWritingContext } from '@/lib/re-educator/writing-context';
 import { getOrCreateWritingProfile } from '@/lib/writingProfile';
 import { getWritingMd } from '@/lib/letta';
@@ -25,6 +26,26 @@ async function fetchWritingMd(userId: string): Promise<string | null> {
     if (!profile?.lettaAgentId) return null;
     const { content } = await getWritingMd(profile.lettaAgentId);
     return content || null;
+}
+
+/**
+ * Read the per-request BYOK descriptor from the request (Phase 2 #4). The
+ * provider name + optional model come from the JSON body's `byok` object; the
+ * API key is preferred from the `x-reeducator-key` header (so it stays out of
+ * any body that a proxy or log might capture) but a body key is accepted as a
+ * fallback. The key is used only to build the reviewer for this one run — it is
+ * NEVER persisted and NEVER logged (spec §7b#4, §8).
+ */
+function readByok(body: unknown, request: Request): ByokRequest | undefined {
+    const raw = (body as { byok?: unknown })?.byok;
+    const fromBody = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : undefined;
+    const headerKey = request.headers.get('x-reeducator-key') ?? undefined;
+    const provider = typeof fromBody?.provider === 'string' ? fromBody.provider : undefined;
+    if (!provider) return undefined;
+    const bodyKey = typeof fromBody?.apiKey === 'string' ? fromBody.apiKey : undefined;
+    const model = typeof fromBody?.model === 'string' ? fromBody.model : undefined;
+    // Header key wins; body key is the fallback for clients that cannot set headers.
+    return { provider, apiKey: headerKey || bodyKey, model };
 }
 
 /**
@@ -96,7 +117,19 @@ export async function POST(request: Request) {
         req.guardOptions = mergeGuardOptions(ctx.guardOptions, req.guardOptions);
         if (!req.writingMdVersion) req.writingMdVersion = ctx.writingMdVersion;
 
-        // Run the engine/modes. Pure, deterministic (no semantic reviewer here).
+        // Phase 2 #4 — BYOK: if the caller supplied a provider + key, construct a
+        // real semantic reviewer for THIS run only. The key never touches the
+        // parsed request object, the ledger, or any log line; it flows into the
+        // provider and is discarded when the handler returns. No descriptor (or a
+        // bad one) ⇒ undefined ⇒ the run stays deterministic-only. The reviewer
+        // is a function, so persisting `req`/`ledger` later cannot leak the key.
+        req.semanticReview = reviewerFromByok(
+            readByok(body, request),
+            req.text.length,
+            ctx.writingMd,
+        );
+
+        // Run the engine/modes. Deterministic unless a BYOK reviewer was built.
         const outcome: ReEducatorResult = await runReEducator(req);
         const { mode, ledger, result } = outcome;
 
