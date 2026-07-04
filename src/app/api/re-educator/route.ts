@@ -10,7 +10,7 @@ import {
     type GuardOptions,
 } from '@/lib/re-educator/service';
 import { verifyChain, genesisHash } from '@/lib/re-educator/ledger';
-import { reviewerFromByok, type ByokRequest } from '@/lib/re-educator/byok';
+import { reviewerFromByok, verifierFromByok, type ByokRequest } from '@/lib/re-educator/byok';
 import { readWritingContext } from '@/lib/re-educator/writing-context';
 import { getOrCreateWritingProfile } from '@/lib/writingProfile';
 import { getWritingMd } from '@/lib/letta';
@@ -117,17 +117,16 @@ export async function POST(request: Request) {
         req.guardOptions = mergeGuardOptions(ctx.guardOptions, req.guardOptions);
         if (!req.writingMdVersion) req.writingMdVersion = ctx.writingMdVersion;
 
-        // Phase 2 #4 — BYOK: if the caller supplied a provider + key, construct a
-        // real semantic reviewer for THIS run only. The key never touches the
-        // parsed request object, the ledger, or any log line; it flows into the
-        // provider and is discarded when the handler returns. No descriptor (or a
-        // bad one) ⇒ undefined ⇒ the run stays deterministic-only. The reviewer
-        // is a function, so persisting `req`/`ledger` later cannot leak the key.
-        req.semanticReview = reviewerFromByok(
-            readByok(body, request),
-            req.text.length,
-            ctx.writingMd,
-        );
+        // Phase 2 #4/#5 — BYOK: if the caller supplied a provider + key, construct a
+        // real semantic reviewer AND a meaning-preservation verifier for THIS run
+        // only, both from the same descriptor. The key never touches the parsed
+        // request object, the ledger, or any log line; it flows into the provider
+        // and is discarded when the handler returns. No descriptor (or a bad one)
+        // ⇒ undefined ⇒ the run stays deterministic-only. Both are functions, so
+        // persisting `req`/`ledger` later cannot leak the key.
+        const byok = readByok(body, request);
+        req.semanticReview = reviewerFromByok(byok, req.text.length, ctx.writingMd);
+        req.meaningVerifier = verifierFromByok(byok);
 
         // Run the engine/modes. Deterministic unless a BYOK reviewer was built.
         const outcome: ReEducatorResult = await runReEducator(req);

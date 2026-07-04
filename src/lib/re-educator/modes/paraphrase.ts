@@ -25,6 +25,7 @@
 import type { Span } from '../types';
 import { PARAPHRASE } from '../profiles';
 import type { RegisteredGuard, SemanticReviewer } from '../engine';
+import type { MeaningVerifier } from '../entailment';
 import type { LedgerMeta } from '../ledger';
 import { review, type ReviewResult } from './review';
 
@@ -32,6 +33,8 @@ export interface ParaphraseConfig {
   guards: RegisteredGuard[];
   anchors?: Span[];
   semanticReview?: SemanticReviewer;
+  /** Optional meaning-preservation verifier (Phase 2 #5), threaded to the engine. */
+  meaningVerifier?: MeaningVerifier;
   meta: LedgerMeta;
 }
 
@@ -62,6 +65,7 @@ export async function paraphrase(config: ParaphraseConfig, text: string): Promis
       guards: config.guards,
       anchors: config.anchors ?? [],
       semanticReview: config.semanticReview,
+      meaningVerifier: config.meaningVerifier,
       meta: config.meta,
     },
     text,

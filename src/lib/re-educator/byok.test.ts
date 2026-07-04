@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { reviewerFromByok, isByokProvider, BYOK_PROVIDERS, type ByokRequest } from './byok';
+import {
+  reviewerFromByok,
+  verifierFromByok,
+  isByokProvider,
+  BYOK_PROVIDERS,
+  type ByokRequest,
+} from './byok';
 
 const KEY = 'sk-secret-value';
 const TEXT_LEN = 100;
@@ -66,5 +72,29 @@ describe('reviewerFromByok — builds a reviewer for valid descriptors', () => {
     expect(String(reviewer)).not.toContain(KEY);
     // And no enumerable property on the function carries it.
     expect(JSON.stringify(Object.entries(reviewer as object))).not.toContain(KEY);
+  });
+});
+
+describe('verifierFromByok', () => {
+  it('returns undefined on absent / unsupported / keyless descriptors', () => {
+    expect(verifierFromByok(undefined)).toBeUndefined();
+    expect(verifierFromByok({ apiKey: KEY })).toBeUndefined();
+    expect(verifierFromByok({ provider: 'gemini', apiKey: KEY })).toBeUndefined();
+    expect(verifierFromByok({ provider: 'openai' })).toBeUndefined();
+    expect(verifierFromByok({ provider: 'openai', apiKey: '' })).toBeUndefined();
+  });
+
+  it('builds a named verifier for valid openai / anthropic descriptors', () => {
+    const oa = verifierFromByok({ provider: 'openai', apiKey: KEY });
+    expect(oa?.name).toBe('openai');
+    const an = verifierFromByok({ provider: 'anthropic', apiKey: KEY });
+    expect(an?.name).toBe('anthropic');
+  });
+
+  it('never throws on a malformed descriptor', () => {
+    expect(() => verifierFromByok(42 as unknown as ByokRequest)).not.toThrow();
+    expect(() =>
+      verifierFromByok({ provider: 123 as unknown as string }),
+    ).not.toThrow();
   });
 });

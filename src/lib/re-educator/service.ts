@@ -25,6 +25,7 @@ import { parseAnchors, hasAnchorMarkers, AnchorSyntaxError, type ParsedAnchors }
 import type { LedgerData, LedgerMeta } from './ledger';
 import { genesisHash } from './ledger';
 import type { RegisteredGuard, SemanticReviewer } from './engine';
+import type { MeaningVerifier } from './entailment';
 import {
   readability,
   terminology,
@@ -118,6 +119,9 @@ export interface ReEducatorRequest {
   writingMdVersion?: string;
   /** Optional semantic reviewer. Phase 0/1: undefined (pass-through). */
   semanticReview?: SemanticReviewer;
+  /** Optional meaning-preservation verifier (Phase 2 #5). Undefined ⇒ semantic
+   * edits cannot pass the meaning gate; mechanical edits are unaffected. */
+  meaningVerifier?: MeaningVerifier;
 
   // --- nudge only ---
   nudge?: NudgeRequest;
@@ -179,7 +183,14 @@ export async function runReEducator(req: ReEducatorRequest): Promise<ReEducatorR
 
     case 'review': {
       const result = await review(
-        { profile: STANDARD, guards, anchors, semanticReview: req.semanticReview, meta },
+        {
+          profile: STANDARD,
+          guards,
+          anchors,
+          semanticReview: req.semanticReview,
+          meaningVerifier: req.meaningVerifier,
+          meta,
+        },
         req.text,
       );
       return { mode: 'review', ledger: result.ledger, result };
@@ -196,6 +207,7 @@ export async function runReEducator(req: ReEducatorRequest): Promise<ReEducatorR
           profile: STANDARD,
           guards,
           semanticReview: req.semanticReview,
+          meaningVerifier: req.meaningVerifier,
           meta,
           quietRoundsToStop: req.auto.quietRoundsToStop,
           maxRounds: req.auto.maxRounds,
@@ -211,7 +223,13 @@ export async function runReEducator(req: ReEducatorRequest): Promise<ReEducatorR
 
     case 'paraphrase': {
       const result = await paraphrase(
-        { guards, anchors, semanticReview: req.semanticReview, meta },
+        {
+          guards,
+          anchors,
+          semanticReview: req.semanticReview,
+          meaningVerifier: req.meaningVerifier,
+          meta,
+        },
         req.text,
       );
       return { mode: 'paraphrase', ledger: result.ledger, result };

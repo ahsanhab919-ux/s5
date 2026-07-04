@@ -29,6 +29,7 @@ import {
   type SemanticReviewer,
   runEngine,
 } from '../engine';
+import type { MeaningVerifier } from '../entailment';
 import type { LedgerData, LedgerMeta } from '../ledger';
 
 export interface ReviewConfig {
@@ -36,6 +37,8 @@ export interface ReviewConfig {
   guards: RegisteredGuard[];
   anchors?: Span[];
   semanticReview?: SemanticReviewer;
+  /** Optional meaning-preservation verifier (Phase 2 #5), threaded to the engine. */
+  meaningVerifier?: MeaningVerifier;
   meta: LedgerMeta;
 }
 
@@ -114,6 +117,7 @@ export async function review(config: ReviewConfig, text: string): Promise<Review
     guards: config.guards,
     anchors: config.anchors ?? [],
     semanticReview: config.semanticReview,
+    meaningVerifier: config.meaningVerifier,
     meta: config.meta,
   };
 

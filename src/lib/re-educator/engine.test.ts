@@ -3,9 +3,12 @@ import {
   runEngine,
   review,
   adjudicate,
+  verifyEdit,
+  verifyMechanicalEdit,
   type EngineConfig,
   type RegisteredGuard,
 } from './engine';
+import type { MeaningVerifier } from './entailment';
 import { STANDARD, PARAPHRASE } from './profiles';
 import { terminology, type TerminologyRule } from './guards/terminology';
 import { pii } from './guards/pii';
@@ -185,5 +188,64 @@ describe('Paraphrase = config, not new code', () => {
     // came purely from swapping the profile object — no engine code changed.
     expect(std.text).toBe(long);
     expect(para.text).toBe(long);
+  });
+});
+
+describe('VERIFY gate selection (Phase 2 #5 — meaning preservation)', () => {
+  const yesVerifier: MeaningVerifier = { name: 'yes', verify: async () => true };
+  const noVerifier: MeaningVerifier = { name: 'no', verify: async () => false };
+
+  // A semantic issue whose category has no deterministic guard.
+  const semanticIssue: Issue = {
+    category: 'clarity',
+    span: { start: 0, end: 5 },
+    severity: 'minor',
+    rationale: 'unclear',
+    text: 'Hello',
+  };
+  const editedSpan: Span = { start: 0, end: 5 };
+
+  it('keeps a semantic edit only when the meaning verifier confirms', async () => {
+    const cfg = baseConfig({ meaningVerifier: yesVerifier });
+    const ok = await verifyEdit(cfg, semanticIssue, editedSpan, 'Howdy world', 'Hello', 'Howdy', 1);
+    expect(ok).toBe(true);
+  });
+
+  it('reverts a semantic edit when the verifier denies meaning preservation', async () => {
+    const cfg = baseConfig({ meaningVerifier: noVerifier });
+    const ok = await verifyEdit(cfg, semanticIssue, editedSpan, 'Howdy world', 'Hello', 'Howdy', 1);
+    expect(ok).toBe(false);
+  });
+
+  it('fails closed for a semantic edit when NO verifier is configured', async () => {
+    const cfg = baseConfig(); // no meaningVerifier
+    const ok = await verifyEdit(cfg, semanticIssue, editedSpan, 'Howdy world', 'Hello', 'Howdy', 1);
+    expect(ok).toBe(false);
+  });
+
+  it('still enforces the diff-bound gate before ever consulting the verifier', async () => {
+    const cfg = baseConfig({ meaningVerifier: yesVerifier });
+    // A huge diff exceeds the bound (maxDiff 0.1) — fails without asking the verifier.
+    const ok = await verifyEdit(cfg, semanticIssue, editedSpan, 'X', 'Hello', 'X', 0.1);
+    expect(ok).toBe(false);
+  });
+
+  it('a mechanical edit ignores the meaning verifier and uses the guard re-run', async () => {
+    // terminology 'utilise'->'utilize' is a valid, non-cascading mechanical fix.
+    const cfg = baseConfig({ meaningVerifier: noVerifier }); // would block if consulted
+    const issue: Issue = {
+      category: 'terminology',
+      span: { start: 7, end: 14 },
+      severity: 'minor',
+      rationale: 'term',
+      text: 'utilise',
+    };
+    const edited = 'Please utilize the form.';
+    const span: Span = { start: 7, end: 14 };
+    const ok = await verifyEdit(cfg, issue, span, edited, 'utilise', 'utilize', 0.15);
+    // Passes on the guard re-run despite the (irrelevant) denying verifier.
+    expect(ok).toBe(true);
+    // The synchronous mechanical gate agrees.
+    expect(verifyMechanicalEdit(cfg, issue, span, edited, 'utilise', 'utilize', 0.15)).toBe(true);
   });
 });

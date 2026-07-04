@@ -27,6 +27,8 @@ import {
   resolvePolicy,
 } from './profiles';
 import { normalizedDistance, withinBound } from './diff';
+import { SEMANTIC_CATEGORIES } from './provider';
+import { type MeaningVerifier, verifyMeaningPreserved } from './entailment';
 import {
   type LedgerData,
   type LedgerEntryInput,
@@ -63,9 +65,20 @@ export interface EngineConfig {
   anchors?: Span[];
   /** Optional semantic reviewer (absent in Phase 0). */
   semanticReview?: SemanticReviewer;
+  /**
+   * Optional meaning-preservation verifier (Phase 2 #5). When present, a
+   * SEMANTIC-category edit is kept only if this confirms the revised text still
+   * means what the original meant — a second VERIFY gate alongside the
+   * deterministic guard re-run. Absent ⇒ semantic edits cannot pass the meaning
+   * gate (fail-closed); mechanical edits are unaffected either way.
+   */
+  meaningVerifier?: MeaningVerifier;
   /** Ledger meta for this run. */
   meta: LedgerMeta;
 }
+
+/** The categories that require the meaning-preservation gate when applied. */
+const SEMANTIC_CATEGORY_SET = new Set<string>(SEMANTIC_CATEGORIES);
 
 /** An issue after adjudication: original issue + its resolved verdict/bound. */
 export interface AdjudicatedIssue {
@@ -146,11 +159,13 @@ function guardFor(config: EngineConfig, issue: Issue): RegisteredGuard | undefin
 }
 
 /**
- * VERIFY a single applied edit: re-run the flagging guard on the new text and
- * confirm it no longer flags a span overlapping the edited region. Also confirm
- * the diff stayed within bound. Pure — takes the already-edited text.
+ * The DETERMINISTIC VERIFY gate for a MECHANICAL edit. Pure + synchronous: the
+ * edit must stay within the diff bound AND the flagging guard must no longer flag
+ * a span overlapping the edited region. This is the Phase 0 gate, unchanged, kept
+ * as its own function so the synchronous callers (Nudge) use it directly without
+ * being dragged into the async meaning-gate path.
  */
-export function verifyEdit(
+export function verifyMechanicalEdit(
   config: EngineConfig,
   issue: Issue,
   editedSpan: Span,
@@ -166,6 +181,43 @@ export function verifyEdit(
     .run(editedText, guard.ctx)
     .some((i) => i.category === issue.category && overlaps(i.span, editedSpan));
   return !reflagged;
+}
+
+/**
+ * VERIFY a single applied edit. Two gates, selected by the issue's category:
+ *
+ *   - The DIFF-BOUND gate always applies: an edit exceeding the category's
+ *     minimum-diff bound fails regardless of kind.
+ *   - For a MECHANICAL edit (a deterministic guard owns the category), the
+ *     second gate is the guard RE-RUN (`verifyMechanicalEdit`). Unchanged from
+ *     Phase 0.
+ *   - For a SEMANTIC edit (clarity / voice-drift / unsupported-assertion — no
+ *     deterministic guard owns it), the second gate is MEANING-PRESERVATION
+ *     (Phase 2 #5): the meaning verifier must confirm the revised text still
+ *     means what the original meant. Absent verifier or any doubt ⇒ fail closed.
+ *
+ * Async since Phase 2 #5: the meaning gate may be a provider network call.
+ */
+export async function verifyEdit(
+  config: EngineConfig,
+  issue: Issue,
+  editedSpan: Span,
+  editedText: string,
+  before: string,
+  after: string,
+  maxDiff: number,
+): Promise<boolean> {
+  // Diff-bound gate applies to every kind of edit.
+  if (!withinBound(before, after, maxDiff)) return false;
+
+  // Semantic categories have no deterministic guard; the meaning gate stands in
+  // for the guard re-run. Fail closed when no verifier can confirm it.
+  if (SEMANTIC_CATEGORY_SET.has(issue.category)) {
+    return verifyMeaningPreserved(config.meaningVerifier, before, after);
+  }
+
+  // Mechanical edit: reuse the pure synchronous gate.
+  return verifyMechanicalEdit(config, issue, editedSpan, editedText, before, after, maxDiff);
 }
 
 /**
@@ -226,15 +278,24 @@ export async function runEngine(config: EngineConfig, inputText: string): Promis
     const candidate = text.slice(0, liveStart) + after + text.slice(liveEnd);
     const newSpan: Span = { start: liveStart, end: liveStart + after.length };
 
-    const ok = verifyEdit(config, issue, newSpan, candidate, before, after, maxDiff);
+    // APPLY_PATH_TODO (Phase 2 #6 / Auto-semantic): only mechanical `auto-fixable`
+    // edits reach here today — semantic findings land as `propose` above and are
+    // never auto-applied. When a semantic apply path is enabled, it routes through
+    // this same verifyEdit call, which already selects the meaning gate for
+    // semantic categories. So the meaning-preservation gate is in place and tested
+    // now; enabling the apply path is an additive change, not a rewrite here.
+    const ok = await verifyEdit(config, issue, newSpan, candidate, before, after, maxDiff);
 
     if (!ok) {
+      const semantic = SEMANTIC_CATEGORY_SET.has(issue.category);
       outcomes.push({
         issue,
         verdict,
         disposition: 'reverted-requeued',
         edit: { before, after, reason: issue.rationale },
-        note: 'Edit failed VERIFY (out of bound or guard still flags) — reverted.',
+        note: semantic
+          ? 'Edit failed VERIFY (meaning not preserved or unverifiable) — reverted.'
+          : 'Edit failed VERIFY (out of bound or guard still flags) — reverted.',
       });
       continue;
     }

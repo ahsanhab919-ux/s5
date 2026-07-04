@@ -27,7 +27,7 @@ import { withinBound } from '../diff';
 import {
   type EngineConfig,
   type RegisteredGuard,
-  verifyEdit,
+  verifyMechanicalEdit,
 } from '../engine';
 
 /** What the author asked to change: a span and the proposed replacement text. */
@@ -128,7 +128,17 @@ export function nudge(config: NudgeConfig, req: NudgeRequest): NudgeResult {
     text: before,
   };
 
-  const ok = verifyEdit(engineView, issueView, newSpan, preview, before, after, policy.maxDiff);
+  // Nudge is a single explicit MECHANICAL patch preview — synchronous, no network,
+  // no meaning gate. Use the deterministic gate directly (not the async verifyEdit).
+  const ok = verifyMechanicalEdit(
+    engineView,
+    issueView,
+    newSpan,
+    preview,
+    before,
+    after,
+    policy.maxDiff,
+  );
   if (!ok) {
     return {
       status: 'refused-verify',

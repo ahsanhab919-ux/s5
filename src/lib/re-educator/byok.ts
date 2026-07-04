@@ -32,6 +32,8 @@ import type { SemanticReviewer } from './engine';
 import type { SemanticProvider } from './provider';
 import { providerToReviewer } from './provider';
 import { openAiProvider, anthropicProvider } from './adapters';
+import type { MeaningVerifier } from './entailment';
+import { openAiVerifier, anthropicVerifier } from './entailment';
 
 /** The provider names a BYOK request may select. Anything else ⇒ no reviewer. */
 export const BYOK_PROVIDERS = ['openai', 'anthropic'] as const;
@@ -112,4 +114,32 @@ export function reviewerFromByok(
     candidateSpans: [{ start: 0, end: textLength }],
     writingMd,
   });
+}
+
+/**
+ * Turn the same untrusted per-request BYOK descriptor into a `MeaningVerifier`
+ * (Phase 2 #5), or `undefined` when no usable descriptor is present. Built from
+ * the same provider + key as the reviewer so a single BYOK descriptor powers both
+ * the semantic REVIEW pass and the meaning-preservation VERIFY gate.
+ *
+ * Returns `undefined` — never throws — on the same conditions as
+ * `reviewerFromByok` (absent/malformed descriptor, unsupported provider, missing
+ * key). The verifier itself also fails closed to `false` at call time. The key is
+ * passed by value and is never returned, stored, or logged (spec §8).
+ */
+export function verifierFromByok(byok: ByokRequest | undefined): MeaningVerifier | undefined {
+  if (!byok || typeof byok !== 'object') return undefined;
+  if (!isByokProvider(byok.provider)) return undefined;
+  if (typeof byok.apiKey !== 'string' || byok.apiKey.length === 0) return undefined;
+
+  switch (byok.provider) {
+    case 'openai':
+      return openAiVerifier({ apiKey: byok.apiKey, model: byok.model });
+    case 'anthropic':
+      return anthropicVerifier({ apiKey: byok.apiKey, model: byok.model });
+    default: {
+      const never: never = byok.provider;
+      throw new Error(`unknown BYOK provider: ${String(never)}`);
+    }
+  }
 }

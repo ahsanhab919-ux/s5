@@ -33,6 +33,7 @@ import {
   type SemanticReviewer,
   runEngine,
 } from '../engine';
+import type { MeaningVerifier } from '../entailment';
 import {
   type LedgerData,
   type LedgerEntryInput,
@@ -59,6 +60,8 @@ export interface AutoConfig {
   profile: Profile;
   guards: RegisteredGuard[];
   semanticReview?: SemanticReviewer;
+  /** Optional meaning-preservation verifier (Phase 2 #5), threaded to the engine. */
+  meaningVerifier?: MeaningVerifier;
   meta: LedgerMeta;
   /** HARD RULE 3 tuning. */
   quietRoundsToStop?: number; // K: consecutive no-edit rounds that end the run. Default 1.
@@ -191,6 +194,7 @@ export async function auto(config: AutoConfig, run: AutoRun): Promise<AutoResult
       guards: config.guards,
       anchors: frozen,
       semanticReview: config.semanticReview,
+      meaningVerifier: config.meaningVerifier,
       meta: config.meta,
     };
 
