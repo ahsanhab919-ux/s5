@@ -160,7 +160,7 @@ function emptyLedger(meta: LedgerMeta): LedgerData {
  * Delegates each mode to its Phase-0 entrypoint with the shared guard set and
  * meta. Paraphrase forces its own profile internally; the others take STANDARD.
  */
-export function runReEducator(req: ReEducatorRequest): ReEducatorResult {
+export async function runReEducator(req: ReEducatorRequest): Promise<ReEducatorResult> {
   const anchors = req.anchors ?? [];
   const guards = defaultGuards(req.guardOptions);
   const meta = buildMeta(req.text, anchors, req.writingMdVersion ?? 'none');
@@ -178,7 +178,7 @@ export function runReEducator(req: ReEducatorRequest): ReEducatorResult {
     }
 
     case 'review': {
-      const result = review(
+      const result = await review(
         { profile: STANDARD, guards, anchors, semanticReview: req.semanticReview, meta },
         req.text,
       );
@@ -191,7 +191,7 @@ export function runReEducator(req: ReEducatorRequest): ReEducatorResult {
           'auto mode requires an "auto" object with optIn + authorization.',
         );
       }
-      const result = auto(
+      const result = await auto(
         {
           profile: STANDARD,
           guards,
@@ -210,7 +210,7 @@ export function runReEducator(req: ReEducatorRequest): ReEducatorResult {
     }
 
     case 'paraphrase': {
-      const result = paraphrase(
+      const result = await paraphrase(
         { guards, anchors, semanticReview: req.semanticReview, meta },
         req.text,
       );

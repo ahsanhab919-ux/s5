@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         if (!req.writingMdVersion) req.writingMdVersion = ctx.writingMdVersion;
 
         // Run the engine/modes. Pure, deterministic (no semantic reviewer here).
-        const outcome: ReEducatorResult = runReEducator(req);
+        const outcome: ReEducatorResult = await runReEducator(req);
         const { mode, ledger, result } = outcome;
 
         // Verify the chain we're about to persist. A run whose own ledger does

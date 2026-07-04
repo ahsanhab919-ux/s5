@@ -106,8 +106,9 @@ function groupOutcomes(outcomes: IssueOutcome[]): IssuePanel {
   return panel;
 }
 
-/** Run one Review round over `text`. */
-export function review(config: ReviewConfig, text: string): ReviewResult {
+/** Run one Review round over `text`.
+ * Async since Phase 2: the engine may invoke a semantic reviewer (network). */
+export async function review(config: ReviewConfig, text: string): Promise<ReviewResult> {
   const engineConfig: EngineConfig = {
     profile: config.profile,
     guards: config.guards,
@@ -116,7 +117,7 @@ export function review(config: ReviewConfig, text: string): ReviewResult {
     meta: config.meta,
   };
 
-  const result: EngineResult = runEngine(engineConfig, text);
+  const result: EngineResult = await runEngine(engineConfig, text);
   const panel = groupOutcomes(result.outcomes);
 
   const summary = {

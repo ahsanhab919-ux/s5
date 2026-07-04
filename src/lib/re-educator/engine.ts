@@ -46,11 +46,15 @@ export interface RegisteredGuard {
 }
 
 /**
- * Optional semantic seam. Phase 0 leaves this undefined. When supplied it
+ * Optional semantic seam. Phase 0/1 leaves this undefined. When supplied it
  * returns extra issues (clarity, tone, unsupported-assertion) to merge into the
  * REVIEW output. Kept as an interface so Phase 2 BYOK is one field, no rework.
+ *
+ * Async since Phase 2: a real reviewer is a network call to a model provider.
+ * A synchronous reviewer may still be supplied (a returned value is awaited
+ * trivially), so existing deterministic/fake reviewers keep working unchanged.
  */
-export type SemanticReviewer = (text: string) => Issue[];
+export type SemanticReviewer = (text: string) => Issue[] | Promise<Issue[]>;
 
 export interface EngineConfig {
   profile: Profile;
@@ -104,15 +108,16 @@ function overlapsAnyAnchor(span: Span, anchors: Span[]): boolean {
   return anchors.some((anchor) => overlaps(span, anchor));
 }
 
-/** Stage 1 — REVIEW: run every guard, then merge any semantic findings. */
-export function review(config: EngineConfig, text: string): Issue[] {
+/** Stage 1 — REVIEW: run every guard, then merge any semantic findings.
+ * Async since Phase 2: the semantic reviewer may be a provider network call. */
+export async function review(config: EngineConfig, text: string): Promise<Issue[]> {
   const issues: Issue[] = [];
   for (const g of config.guards) {
     for (const issue of g.run(text, g.ctx)) {
       issues.push({ ...issue, source: issue.source ?? g.name });
     }
   }
-  if (config.semanticReview) issues.push(...config.semanticReview(text));
+  if (config.semanticReview) issues.push(...(await config.semanticReview(text)));
   // Stable order: by span start, then category, for deterministic processing.
   return issues.sort(
     (a, b) => a.span.start - b.span.start || a.category.localeCompare(b.category),
@@ -167,8 +172,8 @@ export function verifyEdit(
  * Run the whole pipeline. Applies mechanical `auto-fixable` edits one at a time
  * (recomputing offsets after each accepted edit), verifying and ledgering each.
  */
-export function runEngine(config: EngineConfig, inputText: string): EngineResult {
-  const issues = review(config, inputText);
+export async function runEngine(config: EngineConfig, inputText: string): Promise<EngineResult> {
+  const issues = await review(config, inputText);
   const adjudicated = adjudicate(config, issues);
 
   // Apply edits left-to-right so earlier offsets stay valid until consumed.

@@ -170,8 +170,8 @@ describe('defaultGuards — composition', () => {
 });
 
 describe('runReEducator — mode dispatch', () => {
-  it('review returns a verifiable ledger and a review result', () => {
-    const out = runReEducator({ text: 'This is a simple sentence.', mode: 'review', anchors: [] });
+  it('review returns a verifiable ledger and a review result', async () => {
+    const out = await runReEducator({ text: 'This is a simple sentence.', mode: 'review', anchors: [] });
     expect(out.mode).toBe('review');
     expect(verifyChain(out.ledger).valid).toBe(true);
     if (out.mode === 'review') {
@@ -180,8 +180,8 @@ describe('runReEducator — mode dispatch', () => {
     }
   });
 
-  it('paraphrase records the paraphrase profile and stays verifiable', () => {
-    const out = runReEducator({ text: 'This is a simple sentence.', mode: 'paraphrase' });
+  it('paraphrase records the paraphrase profile and stays verifiable', async () => {
+    const out = await runReEducator({ text: 'This is a simple sentence.', mode: 'paraphrase' });
     expect(out.mode).toBe('paraphrase');
     expect(verifyChain(out.ledger).valid).toBe(true);
     if (out.mode === 'paraphrase') {
@@ -189,8 +189,8 @@ describe('runReEducator — mode dispatch', () => {
     }
   });
 
-  it('nudge returns an empty-chain ledger (nudge writes no chain of its own)', () => {
-    const out = runReEducator({
+  it('nudge returns an empty-chain ledger (nudge writes no chain of its own)', async () => {
+    const out = await runReEducator({
       text: 'the color is nice',
       mode: 'nudge',
       nudge: {
@@ -206,8 +206,8 @@ describe('runReEducator — mode dispatch', () => {
     expect(verifyChain(out.ledger).valid).toBe(true);
   });
 
-  it('auto without opt-in refuses (hard rule 1) but still yields a valid ledger', () => {
-    const out = runReEducator({
+  it('auto without opt-in refuses (hard rule 1) but still yields a valid ledger', async () => {
+    const out = await runReEducator({
       text: 'This is a simple sentence.',
       mode: 'auto',
       auto: { optIn: false, authorization: null },
@@ -220,18 +220,19 @@ describe('runReEducator — mode dispatch', () => {
     expect(verifyChain(out.ledger).valid).toBe(true);
   });
 
-  it('throws a request error if a mode is dispatched without its required payload', () => {
-    // Bypass parseRequest to hit the dispatcher guard directly.
-    expect(() => runReEducator({ text: 'x', mode: 'nudge' })).toThrow(ReEducatorRequestError);
-    expect(() => runReEducator({ text: 'x', mode: 'auto' })).toThrow(ReEducatorRequestError);
+  it('rejects with a request error if a mode is dispatched without its required payload', async () => {
+    // Bypass parseRequest to hit the dispatcher guard directly. runReEducator is
+    // async since Phase 2, so the dispatcher throw surfaces as a rejection.
+    await expect(runReEducator({ text: 'x', mode: 'nudge' })).rejects.toThrow(ReEducatorRequestError);
+    await expect(runReEducator({ text: 'x', mode: 'auto' })).rejects.toThrow(ReEducatorRequestError);
   });
 });
 
 describe('runReEducator — determinism (no LLM in Phase 1)', () => {
-  it('produces byte-identical ledgers across two runs of the same input', () => {
+  it('produces byte-identical ledgers across two runs of the same input', async () => {
     const input = { text: 'A short, clear sentence for review.', mode: 'review' as const };
-    const a = runReEducator(input);
-    const b = runReEducator(input);
+    const a = await runReEducator(input);
+    const b = await runReEducator(input);
     expect(JSON.stringify(a.ledger)).toBe(JSON.stringify(b.ledger));
   });
 });

@@ -35,32 +35,32 @@ function authorizedRun(text: string, anchors: Span[] = []): AutoRun {
 }
 
 describe('Auto — hard rule 1 (never self-detect)', () => {
-  it('refuses when optIn is not explicitly true', () => {
+  it('refuses when optIn is not explicitly true', async () => {
     const run = authorizedRun('Please utilise the form.');
-    const res = auto(config(), { ...run, optIn: false });
+    const res = await auto(config(), { ...run, optIn: false });
     expect(res.status).toBe('refused');
     expect(res.stopReason).toBe('refused-no-optin');
     expect(res.text).toBe('Please utilise the form.'); // untouched
     expect(res.rounds).toBe(0);
   });
 
-  it('exposes no way to enter Auto without the opt-in boolean', () => {
+  it('exposes no way to enter Auto without the opt-in boolean', async () => {
     // optIn defaults to nothing meaningful; only literal true proceeds.
     const run = authorizedRun('Please utilise the form.');
     // @ts-expect-error — optIn is required; omitting it is a type error by design.
-    const res = auto(config(), { text: run.text, authorization: run.authorization });
+    const res = await auto(config(), { text: run.text, authorization: run.authorization });
     expect(res.status).toBe('refused');
   });
 });
 
 describe('Auto — hard rule 2 (two blocking sign-offs)', () => {
-  it('refuses when authorization is null', () => {
-    const res = auto(config(), { text: 'Please utilise it.', optIn: true, authorization: null });
+  it('refuses when authorization is null', async () => {
+    const res = await auto(config(), { text: 'Please utilise it.', optIn: true, authorization: null });
     expect(res.status).toBe('refused');
     expect(res.stopReason).toBe('refused-no-authorization');
   });
 
-  it('refuses when anchors are not frozen', () => {
+  it('refuses when anchors are not frozen', async () => {
     const bad = {
       text: 'Please utilise it.',
       optIn: true,
@@ -71,10 +71,10 @@ describe('Auto — hard rule 2 (two blocking sign-offs)', () => {
         scope: [{ start: 0, end: 18 }],
       },
     } as unknown as AutoRun;
-    expect(auto(config(), bad).stopReason).toBe('refused-no-authorization');
+    expect((await auto(config(), bad)).stopReason).toBe('refused-no-authorization');
   });
 
-  it('refuses when scope is not confirmed', () => {
+  it('refuses when scope is not confirmed', async () => {
     const bad = {
       text: 'Please utilise it.',
       optIn: true,
@@ -85,22 +85,22 @@ describe('Auto — hard rule 2 (two blocking sign-offs)', () => {
         scope: [],
       },
     } as unknown as AutoRun;
-    expect(auto(config(), bad).stopReason).toBe('refused-no-authorization');
+    expect((await auto(config(), bad)).stopReason).toBe('refused-no-authorization');
   });
 });
 
 describe('Auto — hard rule 3 (deterministic completion)', () => {
-  it('converges to zero-gate-blocking on clean text (nothing to do)', () => {
-    const res = auto(config(), authorizedRun('The cat sat. The dog ran.'));
+  it('converges to zero-gate-blocking on clean text (nothing to do)', async () => {
+    const res = await auto(config(), authorizedRun('The cat sat. The dog ran.'));
     expect(res.status).toBe('ran');
     expect(res.stopReason).toBe('zero-gate-blocking');
     expect(res.rounds).toBe(1);
     expect(res.queued).toHaveLength(0);
   });
 
-  it('applies safe fixes then stops on quiet rounds when only queued issues remain', () => {
+  it('applies safe fixes then stops on quiet rounds when only queued issues remain', async () => {
     // terminology applies; pii is author-required (a permanent gate-blocker).
-    const res = auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
+    const res = await auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
     expect(res.status).toBe('ran');
     expect(res.text).toContain('Please utilize it.');
     // A gate-blocker (pii) remains, so it cannot converge; it stops quiet.
@@ -108,9 +108,9 @@ describe('Auto — hard rule 3 (deterministic completion)', () => {
     expect(res.queued.some((o) => o.issue.category === 'pii')).toBe(true);
   });
 
-  it('respects the hard round cap', () => {
+  it('respects the hard round cap', async () => {
     // Force many rounds with a large K so the cap is the binding limit.
-    const res = auto(
+    const res = await auto(
       config({ quietRoundsToStop: 99, maxRounds: 2 }),
       authorizedRun('Please utilise it. Email a@b.com.'),
     );
@@ -118,8 +118,8 @@ describe('Auto — hard rule 3 (deterministic completion)', () => {
     expect(res.stopReason).toBe('round-cap');
   });
 
-  it('honors a custom K quiet-round threshold', () => {
-    const res = auto(
+  it('honors a custom K quiet-round threshold', async () => {
+    const res = await auto(
       config({ quietRoundsToStop: 2, maxRounds: 10 }),
       authorizedRun('Email a@b.com only.'),
     );
@@ -130,21 +130,21 @@ describe('Auto — hard rule 3 (deterministic completion)', () => {
 });
 
 describe('Auto — ledger + anchors', () => {
-  it('produces one continuous chain across rounds that verifies', () => {
-    const res = auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
+  it('produces one continuous chain across rounds that verifies', async () => {
+    const res = await auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
     expect(verifyChain(res.ledger).valid).toBe(true);
     expect(res.ledger.entries.length).toBeGreaterThan(0);
   });
 
-  it('never edits inside a frozen anchor', () => {
+  it('never edits inside a frozen anchor', async () => {
     const text = 'Please utilise the form.';
-    const res = auto(config(), authorizedRun(text, [{ start: 0, end: text.length }]));
+    const res = await auto(config(), authorizedRun(text, [{ start: 0, end: text.length }]));
     expect(res.text).toBe(text);
     expect(res.ledger.entries).toHaveLength(0);
     expect(res.queued.some((o) => o.issue.category === 'terminology')).toBe(true);
   });
 
-  it('does not apply edits outside the confirmed scope', () => {
+  it('does not apply edits outside the confirmed scope', async () => {
     // Scope covers only the first sentence; the second "utilise" is out of bounds.
     const text = 'Please utilise this. Please utilise that.';
     const firstEnd = text.indexOf('.') + 1; // end of first sentence
@@ -158,7 +158,7 @@ describe('Auto — ledger + anchors', () => {
         scope: [{ start: 0, end: firstEnd }],
       },
     };
-    const res = auto(config(), run);
+    const res = await auto(config(), run);
     // First fixed, second left alone.
     expect(res.text.startsWith('Please utilize this.')).toBe(true);
     expect(res.text).toContain('Please utilise that.');
@@ -166,9 +166,9 @@ describe('Auto — ledger + anchors', () => {
 });
 
 describe('Auto — determinism', () => {
-  it('is deterministic across repeated runs', () => {
-    const a = auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
-    const b = auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
+  it('is deterministic across repeated runs', async () => {
+    const a = await auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
+    const b = await auto(config(), authorizedRun('Please utilise it. Email a@b.com.'));
     expect(a.text).toBe(b.text);
     expect(a.stopReason).toBe(b.stopReason);
     expect(a.ledger.entries.map((e) => e.hash)).toEqual(b.ledger.entries.map((e) => e.hash));

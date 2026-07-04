@@ -27,16 +27,16 @@ function config(over: Partial<ParaphraseConfig> = {}): ParaphraseConfig {
 const LONG = Array.from({ length: 35 }, (_, i) => `word${i}`).join(' ') + '.';
 
 describe('Paraphrase = config, not new code', () => {
-  it('records the paraphrase profile and stays single-round', () => {
-    const res = paraphrase(config(), 'Please utilise the form.');
+  it('records the paraphrase profile and stays single-round', async () => {
+    const res = await paraphrase(config(), 'Please utilise the form.');
     expect(res.profile).toBe('paraphrase');
     expect(res.rounds).toBe(1);
   });
 
-  it('flips readability from propose (Standard) to auto-fixable (Paraphrase)', () => {
+  it('flips readability from propose (Standard) to auto-fixable (Paraphrase)', async () => {
     // Same engine, same guards, same text — only the profile differs.
-    const std = review({ profile: STANDARD, guards: guards(), anchors: [], meta: META }, LONG);
-    const para = paraphrase(config(), LONG);
+    const std = await review({ profile: STANDARD, guards: guards(), anchors: [], meta: META }, LONG);
+    const para = await paraphrase(config(), LONG);
 
     const stdRead = [...std.panel.proposed, ...std.panel.applied].find(
       (o) => o.issue.category === 'readability',
@@ -50,12 +50,12 @@ describe('Paraphrase = config, not new code', () => {
     expect(paraRead?.verdict).toBe('auto-fixable');
   });
 
-  it('is exactly a Review run with the PARAPHRASE profile (parity)', () => {
-    const viaReview = review(
+  it('is exactly a Review run with the PARAPHRASE profile (parity)', async () => {
+    const viaReview = await review(
       { profile: PARAPHRASE, guards: guards(), anchors: [], meta: META },
       'Please utilise the form.',
     );
-    const viaParaphrase = paraphrase(config(), 'Please utilise the form.');
+    const viaParaphrase = await paraphrase(config(), 'Please utilise the form.');
     expect(viaParaphrase.text).toBe(viaReview.text);
     expect(viaParaphrase.summary).toEqual(viaReview.summary);
     expect(viaParaphrase.ledger.entries.map((e) => e.hash)).toEqual(
@@ -65,23 +65,23 @@ describe('Paraphrase = config, not new code', () => {
 });
 
 describe('Paraphrase — meaning-preserving invariant (the feature)', () => {
-  it('keeps PII author-required and never edits it, even under the loosened profile', () => {
-    const res = paraphrase(config(), 'Reach me at jane@example.com please.');
+  it('keeps PII author-required and never edits it, even under the loosened profile', async () => {
+    const res = await paraphrase(config(), 'Reach me at jane@example.com please.');
     expect(res.text).toBe('Reach me at jane@example.com please.');
     expect(res.panel.authorRequired.some((o) => o.issue.category === 'pii')).toBe(true);
     expect(res.ledger.entries.every((e) => e.category !== 'pii')).toBe(true);
   });
 
-  it('freezes anchor-overlapping spans to author-required with maxDiff 0', () => {
+  it('freezes anchor-overlapping spans to author-required with maxDiff 0', async () => {
     const text = 'Please utilise the form.';
     const anchors: Span[] = [{ start: 0, end: text.length }];
-    const res = paraphrase(config({ anchors }), text);
+    const res = await paraphrase(config({ anchors }), text);
     expect(res.text).toBe(text); // untouched
     expect(res.ledger.entries).toHaveLength(0);
     expect(res.panel.authorRequired.some((o) => o.issue.category === 'terminology')).toBe(true);
   });
 
-  it('confirms pii + unsupported-assertion are identical in STANDARD and PARAPHRASE', () => {
+  it('confirms pii + unsupported-assertion are identical in STANDARD and PARAPHRASE', async () => {
     for (const cat of MEANING_FROZEN_CATEGORIES) {
       expect(PARAPHRASE[cat]).toEqual(STANDARD[cat]);
       expect(PARAPHRASE[cat].verdict).toBe('author-required');
@@ -91,8 +91,8 @@ describe('Paraphrase — meaning-preserving invariant (the feature)', () => {
 });
 
 describe('Paraphrase — still applies safe mechanical fixes + ledgers them', () => {
-  it('applies an in-bound terminology fix and chains it', () => {
-    const res = paraphrase(config(), 'Please utilise the form.');
+  it('applies an in-bound terminology fix and chains it', async () => {
+    const res = await paraphrase(config(), 'Please utilise the form.');
     expect(res.text).toBe('Please utilize the form.');
     expect(res.ledger.entries).toHaveLength(1);
     expect(verifyChain(res.ledger).valid).toBe(true);
@@ -100,9 +100,9 @@ describe('Paraphrase — still applies safe mechanical fixes + ledgers them', ()
 });
 
 describe('Paraphrase — determinism', () => {
-  it('is deterministic across repeated runs', () => {
-    const a = paraphrase(config(), 'Please utilise the form. Email a@b.com.');
-    const b = paraphrase(config(), 'Please utilise the form. Email a@b.com.');
+  it('is deterministic across repeated runs', async () => {
+    const a = await paraphrase(config(), 'Please utilise the form. Email a@b.com.');
+    const b = await paraphrase(config(), 'Please utilise the form. Email a@b.com.');
     expect(a.text).toBe(b.text);
     expect(a.ledger.entries.map((e) => e.hash)).toEqual(b.ledger.entries.map((e) => e.hash));
   });

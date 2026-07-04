@@ -55,8 +55,8 @@ export type ParaphraseResult = ReviewResult & {
  * concrete proof of "Paraphrase = config, not code": the only difference from a
  * Review run is which profile object is handed to the identical engine.
  */
-export function paraphrase(config: ParaphraseConfig, text: string): ParaphraseResult {
-  const result = review(
+export async function paraphrase(config: ParaphraseConfig, text: string): Promise<ParaphraseResult> {
+  const result = await review(
     {
       profile: PARAPHRASE,
       guards: config.guards,

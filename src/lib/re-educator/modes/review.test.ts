@@ -34,26 +34,26 @@ const LONG = Array.from({ length: 35 }, (_, i) => `word${i}`).join(' ') + '.';
 const MIXED = `Please utilise the form. ${LONG} Email a@b.com.`;
 
 describe('review — single round', () => {
-  it('runs exactly one round (rounds === 1)', () => {
-    expect(review(config(), MIXED).rounds).toBe(1);
+  it('runs exactly one round (rounds === 1)', async () => {
+    expect((await review(config(), MIXED)).rounds).toBe(1);
   });
 
-  it('applies in-bound mechanical fixes to the text', () => {
-    const res = review(config(), MIXED);
+  it('applies in-bound mechanical fixes to the text', async () => {
+    const res = await review(config(), MIXED);
     expect(res.text).toContain('Please utilize the form.');
   });
 });
 
 describe('review — issue panel grouping', () => {
-  it('sorts outcomes into applied / proposed / author-required buckets', () => {
-    const res = review(config(), MIXED);
+  it('sorts outcomes into applied / proposed / author-required buckets', async () => {
+    const res = await review(config(), MIXED);
     expect(res.panel.applied.some((o) => o.issue.category === 'terminology')).toBe(true);
     expect(res.panel.authorRequired.some((o) => o.issue.category === 'pii')).toBe(true);
     expect(res.panel.proposed.some((o) => o.issue.category === 'readability')).toBe(true);
   });
 
-  it('summary totals match the panel bucket sizes', () => {
-    const res = review(config(), MIXED);
+  it('summary totals match the panel bucket sizes', async () => {
+    const res = await review(config(), MIXED);
     const { summary, panel } = res;
     expect(summary.applied).toBe(panel.applied.length);
     expect(summary.proposed).toBe(panel.proposed.length);
@@ -67,27 +67,27 @@ describe('review — issue panel grouping', () => {
     );
   });
 
-  it('surfaces reverted edits into the reverted-requeued bucket', () => {
+  it('surfaces reverted edits into the reverted-requeued bucket', async () => {
     // Cascading rule 'utilize'->'use' is out of the 0.15 bound -> reverted.
-    const res = review(config({ termRules: [{ avoid: 'utilize', prefer: 'use' }] }), 'Please utilize it.');
+    const res = await review(config({ termRules: [{ avoid: 'utilize', prefer: 'use' }] }), 'Please utilize it.');
     expect(res.panel.revertedRequeued.length).toBeGreaterThan(0);
     expect(res.text).toBe('Please utilize it.'); // unchanged
   });
 });
 
 describe('review — gates', () => {
-  it('opens the applied-confirm gate when edits were applied', () => {
-    const res = review(config(), 'Please utilise the form.');
+  it('opens the applied-confirm gate when edits were applied', async () => {
+    const res = await review(config(), 'Please utilise the form.');
     expect(res.gates.hasAppliedToConfirm).toBe(true);
   });
 
-  it('opens the review-queue gate when there is anything to hand back', () => {
-    const res = review(config(), 'Email a@b.com now please today.');
+  it('opens the review-queue gate when there is anything to hand back', async () => {
+    const res = await review(config(), 'Email a@b.com now please today.');
     expect(res.gates.hasReviewQueue).toBe(true);
   });
 
-  it('leaves both gates closed for clean text', () => {
-    const res = review(config(), 'The cat sat. The dog ran.');
+  it('leaves both gates closed for clean text', async () => {
+    const res = await review(config(), 'The cat sat. The dog ran.');
     expect(res.gates.hasAppliedToConfirm).toBe(false);
     expect(res.gates.hasReviewQueue).toBe(false);
     expect(res.summary.total).toBe(0);
@@ -95,20 +95,20 @@ describe('review — gates', () => {
 });
 
 describe('review — ledger + anchors', () => {
-  it('produces a ledger that passes chain verification', () => {
-    const res = review(config(), MIXED);
+  it('produces a ledger that passes chain verification', async () => {
+    const res = await review(config(), MIXED);
     expect(verifyChain(res.ledger).valid).toBe(true);
   });
 
-  it('records only applied edits in the ledger', () => {
-    const res = review(config(), MIXED);
+  it('records only applied edits in the ledger', async () => {
+    const res = await review(config(), MIXED);
     expect(res.ledger.entries.length).toBe(res.summary.applied);
   });
 
-  it('never edits inside a frozen anchor (routes it to author-required)', () => {
+  it('never edits inside a frozen anchor (routes it to author-required)', async () => {
     const text = 'Please utilise the form.';
     const anchors: Span[] = [{ start: 0, end: text.length }];
-    const res = review(config({ anchors }), text);
+    const res = await review(config({ anchors }), text);
     expect(res.text).toBe(text);
     expect(res.ledger.entries).toHaveLength(0);
     expect(res.panel.authorRequired.some((o) => o.issue.category === 'terminology')).toBe(true);
@@ -116,9 +116,9 @@ describe('review — ledger + anchors', () => {
 });
 
 describe('review — determinism', () => {
-  it('is deterministic across repeated runs (text + ledger hashes)', () => {
-    const a = review(config(), MIXED);
-    const b = review(config(), MIXED);
+  it('is deterministic across repeated runs (text + ledger hashes)', async () => {
+    const a = await review(config(), MIXED);
+    const b = await review(config(), MIXED);
     expect(a.text).toBe(b.text);
     expect(a.ledger.entries.map((e) => e.hash)).toEqual(b.ledger.entries.map((e) => e.hash));
   });

@@ -163,7 +163,7 @@ function checkGates(run: AutoRun): AutoResult | null {
  * Each round runs the engine on the current text, applies in-scope safe edits,
  * and appends this round's ledger entries into one continuous chain.
  */
-export function auto(config: AutoConfig, run: AutoRun): AutoResult {
+export async function auto(config: AutoConfig, run: AutoRun): Promise<AutoResult> {
   const refusal = checkGates(run);
   if (refusal) return refusal;
 
@@ -194,7 +194,7 @@ export function auto(config: AutoConfig, run: AutoRun): AutoResult {
       meta: config.meta,
     };
 
-    const result = runEngine(engineConfig, text);
+    const result = await runEngine(engineConfig, text);
 
     const applied = result.outcomes.filter((o) => o.disposition === 'applied');
 
