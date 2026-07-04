@@ -13,8 +13,17 @@ import {
   AlertTriangle,
   Undo2,
   GraduationCap,
+  KeyRound,
 } from "lucide-react";
 import { DiffPreview } from "./DiffPreview";
+
+// BYOK providers the route accepts (mirrors BYOK_PROVIDERS in byok.ts). When no
+// key is entered the run stays deterministic-only — the semantic pass is opt-in.
+const BYOK_PROVIDERS = [
+  { id: "", name: "Off (deterministic only)" },
+  { id: "openai", name: "OpenAI" },
+  { id: "anthropic", name: "Anthropic" },
+];
 
 /**
  * ReEducatorPanel — the Writing Studio surface over POST /api/re-educator.
@@ -147,6 +156,14 @@ export default function ReEducatorPanel({ initialText = "", onAccept = undefined
   const [response, setResponse] = useState(null); // full envelope
   const [showDiff, setShowDiff] = useState(false);
 
+  // BYOK (Phase 2 #6): held in component state ONLY for the lifetime of the
+  // session. The key is sent via the x-reeducator-key header (kept out of the
+  // JSON body a proxy/log might capture) and never persisted anywhere. Empty
+  // provider ⇒ no key sent ⇒ the run is deterministic-only.
+  const [byokProvider, setByokProvider] = useState("");
+  const [byokKey, setByokKey] = useState("");
+  const [byokModel, setByokModel] = useState("");
+
   const run = useCallback(async () => {
     if (!text.trim()) {
       setStatus({ type: "error", msg: "Enter some text to re-educate." });
@@ -165,6 +182,17 @@ export default function ReEducatorPanel({ initialText = "", onAccept = undefined
       if (mode === "auto") {
         body.auto = { optIn: false, authorization: null };
       }
+      // BYOK: only attach a semantic descriptor when a provider is selected AND a
+      // key is entered. Provider + optional model go in the body; the key goes in
+      // the header so it stays out of any captured body. No key ⇒ nothing added
+      // ⇒ deterministic-only run (the route fails closed on an absent key).
+      const headers = { "Content-Type": "application/json" };
+      const useByok = byokProvider && byokKey.trim();
+      if (useByok) {
+        body.byok = { provider: byokProvider };
+        if (byokModel.trim()) body.byok.model = byokModel.trim();
+        headers["x-reeducator-key"] = byokKey.trim();
+      }
       if (mode === "nudge") {
         // A whole-text nudge is not meaningful without a selected span; steer
         // the author to Review instead of sending an invalid request.
@@ -177,7 +205,7 @@ export default function ReEducatorPanel({ initialText = "", onAccept = undefined
       }
       const res = await fetch("/api/re-educator", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify(body),
       });
@@ -199,7 +227,7 @@ export default function ReEducatorPanel({ initialText = "", onAccept = undefined
     } finally {
       setRunning(false);
     }
-  }, [text, mode]);
+  }, [text, mode, byokProvider, byokKey, byokModel]);
 
   const result = response?.result;
   const panel = result?.panel;
@@ -263,6 +291,55 @@ export default function ReEducatorPanel({ initialText = "", onAccept = undefined
         ))}
       </div>
 
+      {/* BYOK — semantic pass (optional). Sits with the run controls; the key is
+          session-only and sent via header, never persisted. */}
+      <div className="rounded-md border border-dashed p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs font-medium">Semantic pass (bring your own key)</span>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Optional. Adds an AI review of clarity, voice, and unsupported claims on
+          flagged spans only. Your key is used for this run and never stored.
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            aria-label="Semantic provider"
+            value={byokProvider}
+            disabled={running}
+            onChange={(e) => setByokProvider(e.target.value)}
+            className="h-9 rounded-md border bg-background px-2 text-xs"
+          >
+            {BYOK_PROVIDERS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            aria-label="Model (optional)"
+            value={byokModel}
+            disabled={running || !byokProvider}
+            onChange={(e) => setByokModel(e.target.value)}
+            placeholder="Model (optional)"
+            className="h-9 rounded-md border bg-background px-2 text-xs disabled:opacity-50"
+          />
+        </div>
+        {byokProvider && (
+          <input
+            type="password"
+            aria-label="API key"
+            value={byokKey}
+            disabled={running}
+            onChange={(e) => setByokKey(e.target.value)}
+            placeholder="API key (used once, not saved)"
+            autoComplete="off"
+            className="h-9 w-full rounded-md border bg-background px-2 text-xs"
+          />
+        )}
+      </div>
+
       <Button onClick={run} disabled={running} className="w-full" size="lg">
         {running ? (
           <>
@@ -292,6 +369,22 @@ export default function ReEducatorPanel({ initialText = "", onAccept = undefined
                 {summary.total} issue{summary.total === 1 ? "" : "s"} ·{" "}
                 {summary.applied} applied · {summary.proposed} proposed ·{" "}
                 {summary.authorRequired} author · {summary.revertedRequeued} reverted
+              </span>
+            </div>
+          )}
+
+          {/* Semantic usage (Phase 2 #6) — only present when a BYOK provider ran.
+              Honest, bounded numbers: provider, spans + chars actually sent. */}
+          {response.ledger?.usage && (
+            <div className="flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
+              <KeyRound className="h-3 w-3" />
+              <span>
+                {response.ledger.usage.provider}
+                {response.ledger.usage.model ? ` · ${response.ledger.usage.model}` : ""} ·{" "}
+                {response.ledger.usage.spans_reviewed} span
+                {response.ledger.usage.spans_reviewed === 1 ? "" : "s"} ·{" "}
+                {response.ledger.usage.chars_sent.toLocaleString()} chars sent
+                {response.ledger.usage.capped ? " (capped)" : ""}
               </span>
             </div>
           )}

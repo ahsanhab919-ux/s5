@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   reviewerFromByok,
   verifierFromByok,
@@ -9,6 +9,11 @@ import {
 
 const KEY = 'sk-secret-value';
 const TEXT_LEN = 100;
+
+const ORIGINAL_FETCH = globalThis.fetch;
+afterEach(() => {
+  globalThis.fetch = ORIGINAL_FETCH;
+});
 
 describe('isByokProvider', () => {
   it('accepts exactly the supported providers', () => {
@@ -72,6 +77,63 @@ describe('reviewerFromByok — builds a reviewer for valid descriptors', () => {
     expect(String(reviewer)).not.toContain(KEY);
     // And no enumerable property on the function carries it.
     expect(JSON.stringify(Object.entries(reviewer as object))).not.toContain(KEY);
+  });
+});
+
+describe('reviewerFromByok — candidate spans + caps + usage (Phase 2 #6)', () => {
+  // A tiny fetch stub so the built reviewer can run without a real network call.
+  // It captures the request body so we can assert what reached the "model".
+  function stubFetch(): { calls: Array<{ url: string; body: unknown }> } {
+    const calls: Array<{ url: string; body: unknown }> = [];
+    globalThis.fetch = (async (url: unknown, init?: { body?: string }) => {
+      calls.push({ url: String(url), body: init?.body ? JSON.parse(init.body) : undefined });
+      // A shape both adapters treat as "no issues" — empty content.
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { choices: [{ message: { content: '[]' } }], content: [{ text: '[]' }] };
+        },
+      };
+    }) as unknown as typeof fetch;
+    return { calls };
+  }
+
+  it('reports usage through onUsage when the reviewer runs (whole-document fallback)', async () => {
+    stubFetch();
+    const usages: unknown[] = [];
+    const reviewer = reviewerFromByok({ provider: 'openai', apiKey: KEY }, TEXT_LEN, {
+      onUsage: (u) => usages.push(u),
+    });
+    await reviewer?.('x'.repeat(TEXT_LEN));
+    // Fallback candidate span is the whole document; under the default caps.
+    expect(usages).toHaveLength(1);
+    expect(usages[0]).toMatchObject({ provider: 'openai', spansReviewed: 1, capped: false });
+  });
+
+  it('honours caller-supplied candidate spans over the whole-document fallback', async () => {
+    stubFetch();
+    const usages: Array<{ charsSent: number }> = [];
+    const reviewer = reviewerFromByok({ provider: 'openai', apiKey: KEY }, TEXT_LEN, {
+      candidateSpans: [{ start: 0, end: 10 }],
+      onUsage: (u) => usages.push(u as { charsSent: number }),
+    });
+    await reviewer?.('x'.repeat(TEXT_LEN));
+    // Only the 10-char caller span is sent, not the whole 100-char document.
+    expect(usages[0].charsSent).toBe(10);
+  });
+
+  it('applies caller-supplied caps to bound the fallback', async () => {
+    stubFetch();
+    const usages: Array<{ charsSent: number; capped: boolean }> = [];
+    const reviewer = reviewerFromByok({ provider: 'openai', apiKey: KEY }, TEXT_LEN, {
+      caps: { maxChars: 20 },
+      onUsage: (u) => usages.push(u as { charsSent: number; capped: boolean }),
+    });
+    await reviewer?.('x'.repeat(TEXT_LEN));
+    // Whole-document fallback span is 100 chars > 20 cap, so it is dropped whole:
+    // nothing to review, zero usage, capped=true.
+    expect(usages[0]).toMatchObject({ charsSent: 0, capped: true });
   });
 });
 

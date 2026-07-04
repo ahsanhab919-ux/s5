@@ -11,6 +11,8 @@ import {
 } from '@/lib/re-educator/service';
 import { verifyChain, genesisHash } from '@/lib/re-educator/ledger';
 import { reviewerFromByok, verifierFromByok, type ByokRequest } from '@/lib/re-educator/byok';
+import type { SemanticUsage } from '@/lib/re-educator/provider';
+import type { LedgerUsage } from '@/lib/re-educator/ledger';
 import { readWritingContext } from '@/lib/re-educator/writing-context';
 import { getOrCreateWritingProfile } from '@/lib/writingProfile';
 import { getWritingMd } from '@/lib/letta';
@@ -125,16 +127,45 @@ export async function POST(request: Request) {
         // ⇒ undefined ⇒ the run stays deterministic-only. Both are functions, so
         // persisting `req`/`ledger` later cannot leak the key.
         const byok = readByok(body, request);
-        req.semanticReview = reviewerFromByok(byok, req.text.length, ctx.writingMd);
+        // Capture the (post-cap) semantic usage for the ledger. The sink fires
+        // inside the reviewer during the run; we attach the record to the ledger
+        // AFTER the run (usage lives outside the hash chain, so this cannot break
+        // verification). Never receives the key or manuscript text.
+        let capturedUsage: SemanticUsage | undefined;
+        req.semanticReview = reviewerFromByok(byok, req.text.length, {
+            writingMd: ctx.writingMd,
+            // Caller-supplied regions of interest scope what reaches the model
+            // (spec §4a). Absent ⇒ whole document, still hard-capped by the adapter.
+            candidateSpans: req.candidateSpans,
+            onUsage: (u) => {
+                capturedUsage = u;
+            },
+        });
         req.meaningVerifier = verifierFromByok(byok);
 
         // Run the engine/modes. Deterministic unless a BYOK reviewer was built.
         const outcome: ReEducatorResult = await runReEducator(req);
         const { mode, ledger, result } = outcome;
 
+        // Attach the semantic usage (if a provider ran) to the ledger. This is a
+        // sibling of the hash chain — recorded AFTER the run and outside `meta` —
+        // so it never affects genesis/verification. Carries the model handle the
+        // caller chose (never the key).
+        if (capturedUsage) {
+            const usage: LedgerUsage = {
+                provider: capturedUsage.provider,
+                spans_reviewed: capturedUsage.spansReviewed,
+                chars_sent: capturedUsage.charsSent,
+                capped: capturedUsage.capped,
+            };
+            if (byok?.model) usage.model = byok.model;
+            ledger.usage = usage;
+        }
+
         // Verify the chain we're about to persist. A run whose own ledger does
         // not verify is a bug, not a client error — surface it as a 500 rather
-        // than silently storing a broken chain.
+        // than silently storing a broken chain. Usage sits outside the chain, so
+        // attaching it above does not affect this result.
         const chain = verifyChain(ledger);
         if (!chain.valid) {
             console.error('Re-educator produced an invalid ledger chain:', chain);

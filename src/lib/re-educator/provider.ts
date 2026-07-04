@@ -150,15 +150,94 @@ export function validateProviderIssue(
 }
 
 /**
+ * Hard cost caps for one semantic review call (Phase 2 #6, spec §4a).
+ * Deterministic and honest: we bound what reaches the model by SPAN COUNT and
+ * TOTAL CHARACTERS, not by a fabricated token estimate we cannot make match a
+ * provider's own tokenizer. Applied by `applyCaps` BEFORE any network call.
+ */
+export interface ProviderCaps {
+  /** Max number of candidate spans shown to the model. Extra spans are dropped
+   * (lowest-start-first kept). Non-positive/absent ⇒ no span-count cap. */
+  maxSpans?: number;
+  /** Max total characters (summed span lengths) shown to the model. Spans are
+   * kept in order until the budget is exhausted; the span that would overflow is
+   * dropped whole (never truncated mid-span — a partial span would let the model
+   * reason about a fragment). Non-positive/absent ⇒ no char cap. */
+  maxChars?: number;
+}
+
+/**
+ * The default caps a run uses when the caller supplies none. Conservative but
+ * generous enough for ordinary manuscripts; a caller may override either field.
+ */
+export const DEFAULT_PROVIDER_CAPS: Required<ProviderCaps> = {
+  maxSpans: 40,
+  maxChars: 12000,
+};
+
+/** How many characters a span covers. Clamped to >= 0 for safety. */
+function spanLength(s: Span): number {
+  return Math.max(0, s.end - s.start);
+}
+
+/**
+ * Apply the hard caps to a candidate-span set, deterministically. Pure: returns
+ * a NEW array and never mutates the input. Spans are considered in ascending
+ * start order (stable, document order) so the result is reproducible. A span is
+ * kept only if it fits under BOTH the running span-count and char budgets; the
+ * first span that would overflow the char budget is dropped whole and later
+ * spans are still considered (a shorter later span may still fit). Zero-length
+ * spans are dropped (nothing for the model to read).
+ */
+export function applyCaps(spans: Span[], caps: ProviderCaps = {}): Span[] {
+  const maxSpans = caps.maxSpans && caps.maxSpans > 0 ? caps.maxSpans : Infinity;
+  const maxChars = caps.maxChars && caps.maxChars > 0 ? caps.maxChars : Infinity;
+  const ordered = [...spans]
+    .filter((s) => spanLength(s) > 0)
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+  const kept: Span[] = [];
+  let usedChars = 0;
+  for (const s of ordered) {
+    if (kept.length >= maxSpans) break;
+    const len = spanLength(s);
+    if (usedChars + len > maxChars) continue; // drop whole; a later shorter span may fit
+    kept.push(s);
+    usedChars += len;
+  }
+  return kept;
+}
+
+/**
+ * A usage record for one semantic review call (Phase 2 #6). Recorded in the
+ * ledger meta so every run that spent tokens is auditable. NEVER contains the
+ * key or any manuscript text — only the provider name and the bounded shape of
+ * what was sent (post-cap span count + total chars). `capped` is true iff the
+ * caps dropped at least one candidate span.
+ */
+export interface SemanticUsage {
+  provider: string;
+  spansReviewed: number;
+  charsSent: number;
+  capped: boolean;
+}
+
+/**
  * Options for the adapter. `candidateSpans` are the regions the provider is
  * allowed to see and report on. In Phase 2 #2 the caller injects them (tests
- * pass explicit spans); Phase 2 #6 wires them to the deterministic issue spans
- * so only already-flagged regions ever reach the model (the cost + safety win in
- * §4a/§8). `writingMd` is the optional voice/rules context.
+ * pass explicit spans); Phase 2 #6 wires them to caller-supplied regions of
+ * interest (falling back to the whole document) so only bounded, already-scoped
+ * regions ever reach the model (the cost + safety win in §4a/§8). `writingMd` is
+ * the optional voice/rules context. `caps` bounds span count + chars per call;
+ * absent ⇒ `DEFAULT_PROVIDER_CAPS`.
  */
 export interface ProviderAdapterOptions {
   candidateSpans: Span[];
   writingMd?: string;
+  caps?: ProviderCaps;
+  /** Optional sink invoked once per review call with the (post-cap) usage. Lets
+   * the caller surface usage in the ledger without the reviewer returning it out
+   * of the `(text) => Issue[]` seam. Never receives the key or text. */
+  onUsage?: (usage: SemanticUsage) => void;
 }
 
 /**
@@ -179,9 +258,31 @@ export function providerToReviewer(
   provider: SemanticProvider,
   options: ProviderAdapterOptions,
 ): (text: string) => Promise<Issue[]> {
-  const candidateSpans = options.candidateSpans ?? [];
+  const requested = options.candidateSpans ?? [];
+  const caps = options.caps ?? DEFAULT_PROVIDER_CAPS;
+  // Apply the hard caps ONCE, at construction, so the same bounded set is used
+  // for the call and the usage record. Deterministic; never mutates the input.
+  const candidateSpans = applyCaps(requested, caps);
   return async (text: string): Promise<Issue[]> => {
-    if (candidateSpans.length === 0) return [];
+    if (candidateSpans.length === 0) {
+      // Nothing to review after capping (empty input, or every span zero-length).
+      options.onUsage?.({
+        provider: provider.name,
+        spansReviewed: 0,
+        charsSent: 0,
+        capped: requested.length > 0,
+      });
+      return [];
+    }
+    // Report usage BEFORE the network call: it reflects what we are about to
+    // send, and is recorded even if the provider then fails closed.
+    const charsSent = candidateSpans.reduce((n, s) => n + Math.max(0, s.end - s.start), 0);
+    options.onUsage?.({
+      provider: provider.name,
+      spansReviewed: candidateSpans.length,
+      charsSent,
+      capped: candidateSpans.length < requested.filter((s) => s.end > s.start).length,
+    });
     let raw: Issue[];
     try {
       raw = await provider.review({ text, spans: candidateSpans, writingMd: options.writingMd });

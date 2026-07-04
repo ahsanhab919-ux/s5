@@ -54,6 +54,28 @@ describe('parseRequest — validation', () => {
     expect(ok.anchors).toEqual([{ start: 0, end: 5 }]);
   });
 
+  it('parses candidateSpans (absent/empty => undefined, provided => kept)', () => {
+    const absent = parseRequest({ text: 'hello world', mode: 'review' });
+    expect(absent.candidateSpans).toBeUndefined();
+    const empty = parseRequest({ text: 'hello world', mode: 'review', candidateSpans: [] });
+    expect(empty.candidateSpans).toBeUndefined();
+    const provided = parseRequest({
+      text: 'hello world',
+      mode: 'review',
+      candidateSpans: [{ start: 0, end: 5 }],
+    });
+    expect(provided.candidateSpans).toEqual([{ start: 0, end: 5 }]);
+  });
+
+  it('rejects malformed candidateSpans', () => {
+    expect(() => parseRequest({ text: 'x', mode: 'review', candidateSpans: 'no' })).toThrow(
+      /candidateSpans/,
+    );
+    expect(() =>
+      parseRequest({ text: 'x', mode: 'review', candidateSpans: [{ start: 5, end: 2 }] }),
+    ).toThrow(/start <= end/);
+  });
+
   it('nudge mode requires a well-formed nudge object', () => {
     expect(() => parseRequest({ text: 'x', mode: 'nudge' })).toThrow(/nudge/);
     expect(() =>

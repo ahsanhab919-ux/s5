@@ -113,6 +113,11 @@ export interface ReEducatorRequest {
   mode: ReEducatorMode;
   /** Frozen anchors — spans no edit may touch (claims/numbers/thesis). */
   anchors?: Span[];
+  /** Caller-supplied regions of interest that scope what the semantic provider
+   * is shown (Phase 2 #6, spec §4a). Absent/empty ⇒ the whole document is the
+   * candidate region (still hard-capped by the adapter). Deterministic-only runs
+   * ignore this. */
+  candidateSpans?: Span[];
   /** Guard tuning (terminology rules, voice profile). */
   guardOptions?: GuardOptions;
   /** WRITING.md version tag for the ledger meta. Defaults to 'none'. */
@@ -293,10 +298,13 @@ export function parseRequest(body: unknown): ReEducatorRequest {
     anchors = mergeAnchors(explicitAnchors, parsed.anchors);
   }
 
+  const candidateSpans = parseSpans(b.candidateSpans, 'candidateSpans');
+
   const req: ReEducatorRequest = {
     text,
     mode,
     anchors,
+    candidateSpans: candidateSpans.length > 0 ? candidateSpans : undefined,
     writingMdVersion: typeof b.writingMdVersion === 'string' ? b.writingMdVersion : undefined,
     guardOptions: parseGuardOptions(b.guardOptions),
   };

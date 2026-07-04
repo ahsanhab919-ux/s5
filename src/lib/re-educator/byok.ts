@@ -19,17 +19,19 @@
  *   - The key is a plain string parameter handed to the provider. This file does
  *     not inspect, transform, store, or emit it.
  *
- * Candidate-span binding: Phase 2 #6 wires candidate spans to the deterministic
- * issue spans so only already-flagged regions ever reach the model (the cost +
- * safety win). Until then this factory binds the whole document as a single
- * candidate span — correct and safe (the adapter still validates every returned
- * span against it), just not yet cost-narrowed. See CANDIDATE_SPANS_TODO below.
+ * Candidate-span binding (Phase 2 #6): `reviewerFromByok` prefers caller-supplied
+ * candidate spans so only already-flagged/selected regions ever reach the model
+ * (the cost + safety win), falling back to the whole document when the caller
+ * supplies none. Either way the adapter applies hard caps (span count + chars)
+ * and validates every returned span against the candidate set, and reports the
+ * (post-cap) usage through an optional sink for the ledger.
  *
- * Spec: RE-EDUCATOR-SPEC.md §7b#4 (this step), §8 (fail-closed, never log key).
+ * Spec: RE-EDUCATOR-SPEC.md §7b#4/§7b#6, §4a (cost model), §8 (fail-closed, never log key).
  */
 
 import type { SemanticReviewer } from './engine';
-import type { SemanticProvider } from './provider';
+import type { Span } from './types';
+import type { SemanticProvider, ProviderCaps, SemanticUsage } from './provider';
 import { providerToReviewer } from './provider';
 import { openAiProvider, anthropicProvider } from './adapters';
 import type { MeaningVerifier } from './entailment';
@@ -86,18 +88,33 @@ function buildProvider(name: ByokProviderName, apiKey: string, model?: string): 
  *   - `provider` is missing or not a supported provider,
  *   - `apiKey` is missing or empty.
  *
- * `textLength` is used only to size the interim full-document candidate span.
- * When the manuscript is empty there is nothing to review ⇒ `undefined`.
- * `writingMd` (optional) is the author's voice/rules context, threaded to the
- * provider so semantic findings can align to it.
+ * `textLength` is used only to size the fallback full-document candidate span
+ * when the caller supplies none. When the manuscript is empty there is nothing
+ * to review ⇒ `undefined`.
+ *
+ * `opts` (Phase 2 #6) carries the cost-guardrail wiring, all optional:
+ *   - `candidateSpans`: the caller's regions of interest. When present, ONLY
+ *     these regions ever reach the model (the cost + safety win, spec §4a).
+ *     Absent/empty ⇒ fall back to the whole document, still hard-capped below.
+ *   - `caps`: hard span-count / char bounds per run (absent ⇒ adapter defaults).
+ *   - `writingMd`: the author's voice/rules context, threaded to the provider.
+ *   - `onUsage`: sink for the (post-cap) usage record, for the ledger. Never
+ *     receives the key or text.
  *
  * SECURITY: the key is passed by value to the provider and is otherwise
  * untouched here. It is never returned, stored, or logged (spec §8).
  */
+export interface ReviewerFromByokOptions {
+  candidateSpans?: Span[];
+  caps?: ProviderCaps;
+  writingMd?: string;
+  onUsage?: (usage: SemanticUsage) => void;
+}
+
 export function reviewerFromByok(
   byok: ByokRequest | undefined,
   textLength: number,
-  writingMd?: string,
+  opts: ReviewerFromByokOptions = {},
 ): SemanticReviewer | undefined {
   if (!byok || typeof byok !== 'object') return undefined;
   if (!isByokProvider(byok.provider)) return undefined;
@@ -106,13 +123,21 @@ export function reviewerFromByok(
 
   const provider = buildProvider(byok.provider, byok.apiKey, byok.model);
 
-  // CANDIDATE_SPANS_TODO (Phase 2 #6): bind to the deterministic issue spans so
-  // only already-flagged regions reach the model. Until then, the whole document
-  // is the candidate region — safe (the adapter validates every returned span
-  // against it and re-derives text from source), just not yet cost-narrowed.
+  // Candidate-span binding (resolves CANDIDATE_SPANS_TODO): prefer the caller's
+  // regions of interest so only already-flagged/selected regions reach the model.
+  // Fall back to the whole document when the caller supplies none — safe (the
+  // adapter validates every returned span and re-derives text from source) and
+  // still cost-bounded by the hard caps the adapter applies.
+  const hasCallerSpans = Array.isArray(opts.candidateSpans) && opts.candidateSpans.length > 0;
+  const candidateSpans = hasCallerSpans
+    ? (opts.candidateSpans as Span[])
+    : [{ start: 0, end: textLength }];
+
   return providerToReviewer(provider, {
-    candidateSpans: [{ start: 0, end: textLength }],
-    writingMd,
+    candidateSpans,
+    writingMd: opts.writingMd,
+    caps: opts.caps,
+    onUsage: opts.onUsage,
   });
 }
 

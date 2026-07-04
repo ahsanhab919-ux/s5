@@ -148,3 +148,29 @@ describe('verifyChain', () => {
     expect(verifyChain(l).brokenAt).toBe(1);
   });
 });
+
+describe('LedgerUsage — usage is a sibling of the chain, outside the hash (Phase 2 #6)', () => {
+  function twoEntry() {
+    let l = createLedger(META);
+    l = appendEntry(l, makeInput('iss_a'));
+    l = appendEntry(l, makeInput('iss_b', { category: 'readability' }));
+    return l;
+  }
+
+  it('attaching usage does not change genesis or break verification', () => {
+    const l = twoEntry();
+    const genesisBefore = genesisHash(l.meta);
+    l.usage = { provider: 'openai', spans_reviewed: 3, chars_sent: 210, capped: false };
+    // Genesis is derived from meta only; usage lives outside meta.
+    expect(genesisHash(l.meta)).toBe(genesisBefore);
+    expect(verifyChain(l)).toEqual({ valid: true, brokenAt: -1 });
+  });
+
+  it('changing usage after commit still leaves the chain valid (not authenticated)', () => {
+    const l = twoEntry();
+    l.usage = { provider: 'anthropic', spans_reviewed: 1, chars_sent: 40, capped: true, model: 'x' };
+    l.usage.chars_sent = 999999; // tamper with the observational field
+    // The chain authenticates edits, not cost — so this remains valid by design.
+    expect(verifyChain(l).valid).toBe(true);
+  });
+});

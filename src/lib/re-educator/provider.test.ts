@@ -4,8 +4,11 @@ import {
   validateProviderIssue,
   providerToReviewer,
   fakeProvider,
+  applyCaps,
+  DEFAULT_PROVIDER_CAPS,
   type SemanticProvider,
   type SemanticProviderInput,
+  type SemanticUsage,
 } from './provider';
 import { runEngine, review, type EngineConfig, type RegisteredGuard } from './engine';
 import { STANDARD } from './profiles';
@@ -223,5 +226,123 @@ describe('fakeProvider satisfies the SemanticReviewer seam end-to-end', () => {
     const withProvider = await review(config({ semanticReview: reviewer }), TEXT);
     const deterministicOnly = await review(config(), TEXT);
     expect(withProvider).toEqual(deterministicOnly);
+  });
+});
+
+describe('applyCaps — deterministic cost bounds (Phase 2 #6)', () => {
+  const s = (start: number, end: number): Span => ({ start, end });
+
+  it('returns everything unchanged when under both caps', () => {
+    const spans = [s(0, 5), s(10, 15)];
+    expect(applyCaps(spans, { maxSpans: 10, maxChars: 100 })).toEqual(spans);
+  });
+
+  it('caps by span count, keeping lowest-start-first', () => {
+    const spans = [s(30, 35), s(0, 5), s(10, 15)];
+    const kept = applyCaps(spans, { maxSpans: 2 });
+    expect(kept).toEqual([s(0, 5), s(10, 15)]);
+  });
+
+  it('caps by total chars, dropping the overflowing span whole (never truncates)', () => {
+    const spans = [s(0, 10), s(20, 25)]; // 10 chars then 5 chars
+    const kept = applyCaps(spans, { maxChars: 12 });
+    // 10 fits; 10+5=15 > 12 so the 5-char span is dropped whole.
+    expect(kept).toEqual([s(0, 10)]);
+  });
+
+  it('keeps a later shorter span that still fits after a big one was dropped', () => {
+    const spans = [s(0, 3), s(10, 30), s(40, 42)]; // 3, 20, 2
+    const kept = applyCaps(spans, { maxChars: 6 });
+    // 3 fits (used 3); 20 overflows (skip); 2 fits (used 5). Order preserved.
+    expect(kept).toEqual([s(0, 3), s(40, 42)]);
+  });
+
+  it('drops zero-length spans (nothing to read) and never mutates the input', () => {
+    const spans = [s(5, 5), s(0, 4)];
+    const kept = applyCaps(spans, {});
+    expect(kept).toEqual([s(0, 4)]);
+    expect(spans).toEqual([s(5, 5), s(0, 4)]); // input untouched
+  });
+
+  it('treats absent/non-positive caps as no cap', () => {
+    const spans = [s(0, 5), s(10, 15), s(20, 25)];
+    expect(applyCaps(spans, { maxSpans: 0, maxChars: 0 })).toEqual(spans);
+    expect(applyCaps(spans)).toEqual(spans);
+  });
+});
+
+describe('providerToReviewer — caps + usage reporting (Phase 2 #6)', () => {
+  it('applies the default caps and shows the provider only the kept spans', async () => {
+    // 41 one-char candidate spans; DEFAULT_PROVIDER_CAPS.maxSpans is 40.
+    const many: Span[] = Array.from({ length: 41 }, (_, i) => ({ start: i, end: i + 1 }));
+    let seen: Span[] = [];
+    const provider: SemanticProvider = {
+      name: 'spy',
+      async review(input: SemanticProviderInput) {
+        seen = input.spans;
+        return [];
+      },
+    };
+    const reviewer = providerToReviewer(provider, { candidateSpans: many });
+    await reviewer(TEXT);
+    expect(seen.length).toBe(DEFAULT_PROVIDER_CAPS.maxSpans);
+  });
+
+  it('reports post-cap usage through onUsage, marking capped=true when spans were dropped', async () => {
+    const many: Span[] = Array.from({ length: 41 }, (_, i) => ({ start: i, end: i + 1 }));
+    const usages: SemanticUsage[] = [];
+    const provider = fakeProvider({ name: 'openai', issues: [] });
+    const reviewer = providerToReviewer(provider, {
+      candidateSpans: many,
+      onUsage: (u) => usages.push(u),
+    });
+    await reviewer(TEXT);
+    expect(usages).toHaveLength(1);
+    expect(usages[0]).toMatchObject({
+      provider: 'openai',
+      spansReviewed: DEFAULT_PROVIDER_CAPS.maxSpans,
+      capped: true,
+    });
+    expect(usages[0].charsSent).toBe(DEFAULT_PROVIDER_CAPS.maxSpans); // 1 char each
+  });
+
+  it('reports capped=false and the exact chars when under caps', async () => {
+    const usages: SemanticUsage[] = [];
+    const provider = fakeProvider({ name: 'anthropic', issues: [] });
+    const reviewer = providerToReviewer(provider, {
+      candidateSpans: [CANDIDATE], // 15 chars
+      onUsage: (u) => usages.push(u),
+    });
+    await reviewer(TEXT);
+    expect(usages[0]).toEqual({
+      provider: 'anthropic',
+      spansReviewed: 1,
+      charsSent: CANDIDATE.end - CANDIDATE.start,
+      capped: false,
+    });
+  });
+
+  it('reports zero-usage (spansReviewed 0) when every candidate span is empty', async () => {
+    const usages: SemanticUsage[] = [];
+    const provider = fakeProvider({ name: 'openai', issues: [goodIssue()] });
+    const reviewer = providerToReviewer(provider, {
+      candidateSpans: [{ start: 3, end: 3 }],
+      onUsage: (u) => usages.push(u),
+    });
+    const out = await reviewer(TEXT);
+    expect(out).toEqual([]); // nothing reviewed
+    expect(usages[0]).toMatchObject({ spansReviewed: 0, charsSent: 0, capped: true });
+  });
+
+  it('still reports usage even when the provider then throws (fails closed to [])', async () => {
+    const usages: SemanticUsage[] = [];
+    const provider = fakeProvider({ name: 'openai', throwError: true });
+    const reviewer = providerToReviewer(provider, {
+      candidateSpans: [CANDIDATE],
+      onUsage: (u) => usages.push(u),
+    });
+    const out = await reviewer(TEXT);
+    expect(out).toEqual([]);
+    expect(usages[0]).toMatchObject({ provider: 'openai', spansReviewed: 1 });
   });
 });

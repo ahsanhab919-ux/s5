@@ -61,9 +61,31 @@ export interface LedgerMeta {
   anchors: Span[];
 }
 
+/**
+ * Observational usage metadata for a run (Phase 2 #6). This is a SIBLING of the
+ * authenticated chain, deliberately OUTSIDE `meta` and OUTSIDE the hash: the
+ * chain authenticates what was decided (manuscript, anchors, edits), not what it
+ * cost to decide. Recording usage in `meta` would change the genesis hash after
+ * the chain was already built and break verification, so it lives here instead.
+ * NEVER contains the BYOK key or manuscript text — only the bounded shape of what
+ * reached the model (provider, post-cap span count + chars). Absent for a
+ * deterministic-only run (no semantic provider was invoked).
+ */
+export interface LedgerUsage {
+  provider: string;
+  spans_reviewed: number;
+  chars_sent: number;
+  capped: boolean;
+  /** The model handle, when the caller supplied one (else the adapter default
+   * was used and this is omitted). Never the key. */
+  model?: string;
+}
+
 export interface LedgerData {
   meta: LedgerMeta;
   entries: LedgerEntry[];
+  /** Optional per-run semantic usage (Phase 2 #6). Outside the hash chain. */
+  usage?: LedgerUsage;
 }
 
 /**
