@@ -1,1 +1,10 @@
-npx lint-staged
+# Pre-commit: run the checks that actually work locally.
+#
+# NOTE: ESLint is intentionally NOT run here. eslint-config-next's use of
+# FlatCompat + next/core-web-vitals produces a circular-reference config
+# under ESLint 9 that crashes with 'Converting circular structure to JSON'.
+# See tracking issue: ESLint 9 flat-config crash: migrate off FlatCompat.
+#
+# Until that lands, this hook runs tsc so pre-commit is protecting something
+# real, and --no-verify stops being load-bearing.
+npx --no-install tsc --noEmit
