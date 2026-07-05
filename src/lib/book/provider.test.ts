@@ -203,6 +203,16 @@ describe('buildProseGenerator — no key fails closed', () => {
         const gen = buildProseGenerator('anthropic', 'sk-x', { fetchImpl });
         await expect(gen({ system: 's', prompt: 'p', maxOutputTokens: 10 })).rejects.toThrow(BookRunError);
     });
+
+    it('fails closed (BookRunError) when the network call throws (timeout/abort/reset)', async () => {
+        // runFetch swallows the throw and returns null; the generator must then fail
+        // loud rather than hang or return an empty draft. (Finding A2 coverage.)
+        const fetchImpl = vi.fn(async () => {
+            throw new Error('ECONNRESET');
+        }) as unknown as typeof fetch;
+        const gen = buildProseGenerator('openai', 'sk-x', { fetchImpl });
+        await expect(gen({ system: 's', prompt: 'p', maxOutputTokens: 10 })).rejects.toThrow(BookRunError);
+    });
 });
 
 describe('pure helpers', () => {

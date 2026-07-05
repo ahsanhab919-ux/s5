@@ -6,6 +6,7 @@ const {
     mockBookCreate,
     mockBookFind,
     mockBookFindOne,
+    mockBookFindOneAndUpdate,
     mockChapterFind,
     mockChapterFindOne,
     mockChapterCreate,
@@ -13,13 +14,19 @@ const {
     mockBookCreate: vi.fn(),
     mockBookFind: vi.fn(),
     mockBookFindOne: vi.fn(),
+    mockBookFindOneAndUpdate: vi.fn(),
     mockChapterFind: vi.fn(),
     mockChapterFindOne: vi.fn(),
     mockChapterCreate: vi.fn(),
 }));
 
 vi.mock('@/models/Book', () => ({
-    default: { create: mockBookCreate, find: mockBookFind, findOne: mockBookFindOne },
+    default: {
+        create: mockBookCreate,
+        find: mockBookFind,
+        findOne: mockBookFindOne,
+        findOneAndUpdate: mockBookFindOneAndUpdate,
+    },
     BOOK_KINDS: ['fiction', 'nonfiction'],
 }));
 
@@ -33,6 +40,7 @@ import {
     createBook,
     listBooks,
     getBook,
+    claimBookForRun,
     getAcceptedChapters,
     saveChapterRecord,
     setBookStatus,
@@ -143,6 +151,41 @@ describe('getBook', () => {
     it('throws a not-found error when missing', async () => {
         mockBookFindOne.mockResolvedValue(null);
         await expect(getBook('user-1', 'nope')).rejects.toMatchObject({ notFound: true });
+    });
+});
+
+describe('claimBookForRun (atomic draft → authoring)', () => {
+    it('claims a draft book and returns the updated (authoring) book', async () => {
+        mockBookFindOneAndUpdate.mockResolvedValue({ _id: 'b1', userId: 'user-1', status: 'authoring' });
+        const b = await claimBookForRun('user-1', 'b1');
+        // The precondition (status: 'draft') is part of the atomic filter — this is
+        // the single gate, not a prior read.
+        expect(mockBookFindOneAndUpdate).toHaveBeenCalledWith(
+            { _id: 'b1', userId: 'user-1', status: 'draft' },
+            { $set: { status: 'authoring' } },
+            { new: true }
+        );
+        expect(b.status).toBe('authoring');
+        // A successful claim does not fall through to the disambiguation read.
+        expect(mockBookFindOne).not.toHaveBeenCalled();
+    });
+
+    it('throws not-found (404-class) when no such owned book exists', async () => {
+        mockBookFindOneAndUpdate.mockResolvedValue(null);
+        mockBookFindOne.mockResolvedValue(null);
+        await expect(claimBookForRun('user-1', 'nope')).rejects.toMatchObject({ notFound: true });
+    });
+
+    it('throws non-notFound (400-class) when the book exists but is not draft', async () => {
+        mockBookFindOneAndUpdate.mockResolvedValue(null);
+        mockBookFindOne.mockResolvedValue({ _id: 'b1', userId: 'user-1', status: 'authoring' });
+        await expect(claimBookForRun('user-1', 'b1')).rejects.toMatchObject({ notFound: false });
+        await expect(claimBookForRun('user-1', 'b1')).rejects.toThrow(/cannot be started|reset it to draft/i);
+    });
+
+    it('requires userId and bookId', async () => {
+        await expect(claimBookForRun('', 'b1')).rejects.toThrow(BookServiceError);
+        await expect(claimBookForRun('user-1', '')).rejects.toThrow(BookServiceError);
     });
 });
 

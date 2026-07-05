@@ -136,6 +136,40 @@ export async function getBook(userId: string, bookId: string): Promise<IBook> {
     return book;
 }
 
+/**
+ * Atomically claim an owned book for a run: transition `draft → authoring` in a
+ * single conditional write, returning the updated book. This is the ONE gate that
+ * starts a run — it closes the check-then-set race where two concurrent POST /run
+ * could both pass a prior read-guard and both spend on the model.
+ *
+ * STRICT: only a `draft` book can be claimed. A book already `authoring` (a prior
+ * crash/failure left it there) is NOT re-runnable via the API — it must be
+ * explicitly reset to `draft` first. Fail-closed: keep a human in the loop before
+ * re-spending money on a book that already failed.
+ *
+ * Mirrors the atomic custody claim (second-me/key-custody.ts): a `findOneAndUpdate`
+ * whose filter carries the expected precondition (`status: 'draft'`). On a null
+ * result we disambiguate to preserve the 404-vs-400 contract.
+ */
+export async function claimBookForRun(userId: string, bookId: string): Promise<IBook> {
+    if (!userId) throw new BookServiceError('claimBookForRun: userId is required');
+    if (!bookId) throw new BookServiceError('claimBookForRun: bookId is required');
+    await dbConnect();
+    const claimed = await Book.findOneAndUpdate(
+        { _id: bookId, userId, status: 'draft' },
+        { $set: { status: 'authoring' } },
+        { new: true }
+    );
+    if (claimed) return claimed;
+    // The claim missed: either the book isn't owned/doesn't exist (404), or it
+    // exists but is not `draft` (400). Disambiguate with a plain owner-scoped read.
+    const existing = await Book.findOne({ _id: bookId, userId });
+    if (!existing) throw new BookServiceError('Book not found.', true);
+    throw new BookServiceError(
+        `Book is "${existing.status}" and cannot be started; reset it to draft to run again.`
+    );
+}
+
 /** Fetch the accepted chapters of an owned book, in reading order. */
 export async function getAcceptedChapters(
     userId: string,

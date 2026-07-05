@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/server-auth';
-import { getBook, setBookStatus, BookServiceError } from '@/lib/book/book-service';
+import { claimBookForRun, setBookStatus, BookServiceError } from '@/lib/book/book-service';
 import { runChapterLoop, BookAuthorError, type PlannedChapter } from '@/lib/book/author';
 import { buildAuthorDeps, BookRunError } from '@/lib/book/provider';
 import { ensureBibleBlock, BookBibleError } from '@/lib/book/bible';
@@ -21,9 +21,12 @@ import { useByokKey } from '@/lib/second-me/key-custody';
  * `failed`, and a run only reaches `complete` when EVERY planned chapter passed
  * the done-gate.
  *
- * Status guard: only a book in `draft` or `authoring` may run; a `complete` or
- * `failed` book is rejected (409-ish, surfaced as 400) — re-authoring a finished
- * book must be an explicit reset, not a side effect of hitting run again.
+ * Atomic claim: starting a run is a single conditional write (`draft → authoring`)
+ * via `claimBookForRun`, not a read-then-set. This closes the concurrent
+ * double-run race (two POSTs both passing a prior read-guard and both spending).
+ * ONLY a `draft` book can be claimed — a `complete`/`failed`/`authoring` book is
+ * rejected (surfaced as 400); re-authoring a finished/crashed book must be an
+ * explicit reset to `draft`, not a side effect of hitting run again.
  *
  * BYOK: the key is recovered from the user's PERSISTED custody (second-me
  * key-custody) for the chosen provider, or supplied once via the
@@ -33,7 +36,6 @@ import { useByokKey } from '@/lib/second-me/key-custody';
  * Body: { provider: 'openai'|'anthropic', model?: string }
  * Returns: { status, accepted, failed, haltedAtIndex, chapters: [{index,status,attempts}] }
  */
-const RUNNABLE_STATUSES = ['draft', 'authoring'] as const;
 
 export async function POST(
     request: Request,
@@ -66,31 +68,10 @@ export async function POST(
         }
         const model = typeof b.model === 'string' && b.model.length > 0 ? b.model : undefined;
 
-        // Ownership + not-found (404) enforced by the service (scoped to userId).
-        const book = await getBook(userId, bookId);
-
-        // Status guard: only draft/authoring may run.
-        if (!(RUNNABLE_STATUSES as readonly string[]).includes(book.status)) {
-            return NextResponse.json(
-                { error: `Book is "${book.status}" and cannot be run. Only draft/authoring books may run.` },
-                { status: 400 }
-            );
-        }
-
-        const plan: PlannedChapter[] = book.plan.map((c) => ({
-            index: c.index,
-            intent: c.intent,
-            beats: c.beats,
-        }));
-        if (plan.length === 0) {
-            return NextResponse.json(
-                { error: 'Book has no chapter plan to author.' },
-                { status: 400 }
-            );
-        }
-
-        // Recover the BYOK key: per-request header wins (kept out of captured
-        // bodies), else the user's persisted, sealed custody. Fail closed if none.
+        // Recover the BYOK key BEFORE claiming the book: a missing key must return
+        // 400, consume NO claim (leave the book `draft`), and make no provider
+        // call. Per-request header wins (kept out of captured bodies), else the
+        // user's persisted, sealed custody. Fail closed if none.
         const headerKey = request.headers.get('x-second-me-key') ?? undefined;
         const apiKey =
             headerKey || (await useByokKey(userId, provider as ByokProviderName));
@@ -101,6 +82,24 @@ export async function POST(
                 },
                 { status: 400 }
             );
+        }
+
+        // Atomic claim (draft → authoring): the SINGLE gate that starts a run. In
+        // one conditional write it enforces ownership (404), the draft-only
+        // precondition (400), and the authoring transition — closing the concurrent
+        // double-run race. From here on the book is `authoring`, so any throw must
+        // flow through the catch (which resets it to `failed`), never an early
+        // return.
+        const book = await claimBookForRun(userId, bookId);
+        markedAuthoring = true;
+
+        const plan: PlannedChapter[] = book.plan.map((c) => ({
+            index: c.index,
+            intent: c.intent,
+            beats: c.beats,
+        }));
+        if (plan.length === 0) {
+            throw new BookServiceError('Book has no chapter plan to author.');
         }
 
         // The user's writing agent owns WRITING.md (voice) + the bible block.
@@ -120,10 +119,6 @@ export async function POST(
             writingMd,
             model: model ?? profile.modelHandle,
         });
-
-        // Mark authoring BEFORE the run so a crash leaves an honest state.
-        await setBookStatus(userId, bookId, 'authoring');
-        markedAuthoring = true;
 
         const result = await runChapterLoop(plan, deps, { failurePolicy: 'halt' });
 
