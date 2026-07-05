@@ -1,6 +1,6 @@
 import SvgColor from "@/components/common/SvgColor";
 import { PATH_ACCOUNT, PATH_TOOLS } from "@/config/route";
-import { PenLine, Presentation, Search, Table, Target } from "lucide-react";
+import { PenLine, Presentation, Search, Table, Target, UserCog } from "lucide-react";
 import { ReactElement } from "react";
 
 const icon = (name: string): ReactElement => (
@@ -26,7 +26,8 @@ export const NAV_ICONS = {
   slide_generation: <Presentation className="size-3.5 text-green-500 sm:size-4" />,
   sheet_generation: <Table className="size-3.5 text-green-500 sm:size-4" />,
   deep_research: <Search className="size-3.5 text-green-500 sm:size-4" />,
-  
+  second_me: <UserCog className="size-3.5 text-emerald-500 sm:size-4" />,
+
 };
 
 export const NAV_TOOLS = [
@@ -189,6 +190,12 @@ export const NAV_ITEMS = [
         path: PATH_ACCOUNT.settings.root,
         icon: NAV_ICONS.user,
         iconColor: "#3498DB",
+      },
+      {
+        title: "Second Me",
+        path: PATH_TOOLS.second_me,
+        icon: NAV_ICONS.second_me,
+        iconColor: "#10B981",
       },
     ],
   },

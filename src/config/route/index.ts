@@ -63,6 +63,7 @@ export const PATH_TOOLS = {
   translator: "/translator",
   agents: "/agents",
   marketing_automation: "/marketing-automation",
+  second_me: "/second-me",
   slide_generator: "/agents",
   deep_research: "/agents",
   data_analysis: "/agents",
