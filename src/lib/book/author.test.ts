@@ -5,6 +5,7 @@ import {
     BookAuthorError,
     DEFAULT_MAX_REGEN,
     type AuthorDeps,
+    type AttemptRecord,
     type GateResult,
     type PlannedChapter,
     type SavedChapter,
@@ -168,6 +169,76 @@ describe('runChapterLoop — non-fiction facts hook', () => {
         const deps = makeDeps({ generateChapter });
         await runChapterLoop([plan[0]], deps);
         expect(generateChapter.mock.calls[0][0].facts).toBeNull();
+    });
+});
+
+describe('runChapterLoop — attempt history (recordAttempt, optional + fail-soft-shaped)', () => {
+    it('records a failed try then an accepted try on regeneration', async () => {
+        let calls = 0;
+        const generateChapter = vi.fn(async ({ attempt }) => {
+            calls += 1;
+            return `draft ${attempt}`;
+        });
+        // Fail the first draft, pass the regeneration.
+        const verifyChapter = vi.fn(async (draft: string): Promise<GateResult> => {
+            if (calls === 1) return { passed: false, text: draft, issues: ['too flat'] };
+            return { passed: true, text: draft, issues: [] };
+        });
+        const recordAttempt = vi.fn(async (_record: AttemptRecord) => {});
+        const deps = makeDeps({ generateChapter, verifyChapter, recordAttempt });
+        await runChapterLoop([plan[0]], deps);
+
+        expect(recordAttempt).toHaveBeenCalledTimes(2);
+        // 1-based try numbers; the failed try carries the gate issues.
+        expect(recordAttempt.mock.calls[0][0]).toMatchObject({
+            index: 0,
+            attempt: 1,
+            status: 'failed',
+            gateIssues: ['too flat'],
+        });
+        expect(recordAttempt.mock.calls[1][0]).toMatchObject({
+            index: 0,
+            attempt: 2,
+            status: 'accepted',
+            gateIssues: [],
+        });
+    });
+
+    it('records nothing extra and does not throw when recordAttempt is undefined (back-compat)', async () => {
+        // makeDeps supplies no recordAttempt — the loop must run exactly as before.
+        const deps = makeDeps();
+        expect(deps.recordAttempt).toBeUndefined();
+        const res = await runChapterLoop(plan, deps);
+        expect(res.status).toBe('complete');
+        expect(res.chapters.map((c) => c.status)).toEqual(['accepted', 'accepted']);
+    });
+});
+
+describe('runChapterLoop — resumability (alreadyAccepted)', () => {
+    it('skips an already-accepted index: no generate/save/gate/bible for it, still counted', async () => {
+        const deps = makeDeps();
+        const res = await runChapterLoop(plan, deps, { alreadyAccepted: [0] });
+        expect(res.status).toBe('complete');
+        // Only chapter 1 was actually authored.
+        expect(deps.generateChapter).toHaveBeenCalledTimes(1);
+        expect(deps.verifyChapter).toHaveBeenCalledTimes(1);
+        expect(deps.saveChapter).toHaveBeenCalledTimes(1);
+        expect(deps.updateBible).toHaveBeenCalledTimes(1);
+        expect(deps.readBible).toHaveBeenCalledTimes(1);
+        // The skipped chapter is reported accepted (attempts 0 = not tried this run).
+        expect(res.chapters.map((c) => c.status)).toEqual(['accepted', 'accepted']);
+        const skipped = res.chapters.find((c) => c.index === 0)!;
+        expect(skipped.attempts).toBe(0);
+    });
+
+    it('does ZERO generation and completes when every planned index is already accepted', async () => {
+        const deps = makeDeps();
+        const res = await runChapterLoop(plan, deps, { alreadyAccepted: [0, 1] });
+        expect(res.status).toBe('complete');
+        expect(deps.generateChapter).not.toHaveBeenCalled();
+        expect(deps.saveChapter).not.toHaveBeenCalled();
+        expect(deps.updateBible).not.toHaveBeenCalled();
+        expect(res.chapters.map((c) => c.status)).toEqual(['accepted', 'accepted']);
     });
 });
 

@@ -12,6 +12,7 @@
 import dbConnect from '@/lib/dbConnect';
 import Book, { IBook, BOOK_KINDS, BookKindValue } from '@/models/Book';
 import Chapter, { IChapter, CHAPTER_STATUSES, ChapterStatusValue } from '@/models/Chapter';
+import ChapterAttempt, { IChapterAttempt } from '@/models/ChapterAttempt';
 import { ingestBookDocument, type BookKind } from './ingest';
 
 /** Thrown when a book request payload is invalid or an owned record is missing. */
@@ -244,6 +245,61 @@ export async function saveChapterRecord(
         return existing.save();
     }
     return Chapter.create({ userId, bookId, ...chapter });
+}
+
+/** Max attempt-history rows returned by a single list call (keeps responses sane). */
+export const MAX_CHAPTER_ATTEMPTS = 200;
+
+/** One recorded try's gate outcome (observability; not the source of truth). */
+export interface ChapterAttemptInput {
+    index: number;
+    attempt: number;
+    status: ChapterStatusValue;
+    gateIssues?: string[];
+    tokensUsed?: number;
+    model?: string;
+}
+
+/**
+ * Record one chapter try's gate outcome for run history. Observability only — the
+ * accepted chapter text lives in Chapter. Owner-scoped. Never stores draft text.
+ * The provider wraps this fail-soft: a rejected write must not abort authoring.
+ */
+export async function recordChapterAttempt(
+    userId: string,
+    bookId: string,
+    attempt: ChapterAttemptInput
+): Promise<IChapterAttempt> {
+    if (!userId) throw new BookServiceError('recordChapterAttempt: userId is required');
+    if (!bookId) throw new BookServiceError('recordChapterAttempt: bookId is required');
+    if (!(CHAPTER_STATUSES as readonly string[]).includes(attempt.status)) {
+        throw new BookServiceError(`Invalid chapter status "${attempt.status}".`);
+    }
+    await dbConnect();
+    return ChapterAttempt.create({
+        userId,
+        bookId,
+        index: attempt.index,
+        attempt: attempt.attempt,
+        status: attempt.status,
+        gateIssues: attempt.gateIssues ?? [],
+        tokensUsed: attempt.tokensUsed,
+        // Domain field `model` maps to the `modelHandle` column (see ChapterAttempt).
+        modelHandle: attempt.model,
+    });
+}
+
+/** List an owned book's chapter-attempt history, newest first (bounded). */
+export async function listChapterAttempts(
+    userId: string,
+    bookId: string
+): Promise<IChapterAttempt[]> {
+    if (!userId) throw new BookServiceError('listChapterAttempts: userId is required');
+    if (!bookId) throw new BookServiceError('listChapterAttempts: bookId is required');
+    await dbConnect();
+    return ChapterAttempt.find({ userId, bookId })
+        .sort({ createdAt: -1 })
+        .limit(MAX_CHAPTER_ATTEMPTS);
 }
 
 /** Update a book's lifecycle status (owner-scoped). */

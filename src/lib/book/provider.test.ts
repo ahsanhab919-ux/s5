@@ -4,12 +4,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // are exercisable without network. Keep the real errors/pure helpers.
 vi.mock('@/lib/dbConnect', () => ({ default: vi.fn() }));
 
-const { mockGetBible, mockUpdateBible, mockSaveChapter, mockGate } = vi.hoisted(() => ({
-    mockGetBible: vi.fn(),
-    mockUpdateBible: vi.fn(),
-    mockSaveChapter: vi.fn(),
-    mockGate: vi.fn(),
-}));
+const { mockGetBible, mockUpdateBible, mockSaveChapter, mockRecordAttempt, mockGate } = vi.hoisted(
+    () => ({
+        mockGetBible: vi.fn(),
+        mockUpdateBible: vi.fn(),
+        mockSaveChapter: vi.fn(),
+        mockRecordAttempt: vi.fn(),
+        mockGate: vi.fn(),
+    })
+);
 
 vi.mock('./bible', async (importOriginal) => ({
     ...(await importOriginal<typeof import('./bible')>()),
@@ -19,6 +22,7 @@ vi.mock('./bible', async (importOriginal) => ({
 vi.mock('./book-service', async (importOriginal) => ({
     ...(await importOriginal<typeof import('./book-service')>()),
     saveChapterRecord: mockSaveChapter,
+    recordChapterAttempt: mockRecordAttempt,
 }));
 vi.mock('./gate', () => ({
     buildReEducatorGate: (...args: unknown[]) => mockGate(...args),
@@ -118,6 +122,49 @@ describe('buildAuthorDeps — wiring', () => {
     it('verifyChapter defaults to the Re-educator gate builder', () => {
         buildAuthorDeps({ ...baseInput, generator: fakeGenerator('x', 1), gateOptions: { writingMdVersion: 'v2' } });
         expect(mockGate).toHaveBeenCalledWith({ writingMdVersion: 'v2' });
+    });
+});
+
+describe('buildAuthorDeps — recordAttempt (fail-soft history)', () => {
+    it('default recordAttempt delegates to recordChapterAttempt, owner-scoped', async () => {
+        mockRecordAttempt.mockResolvedValue({});
+        const deps = buildAuthorDeps({
+            ...baseInput,
+            model: 'gpt-x',
+            generator: fakeGenerator('x', 1),
+        });
+        await deps.recordAttempt!({ index: 1, attempt: 2, status: 'failed', gateIssues: ['nope'] });
+        expect(mockRecordAttempt).toHaveBeenCalledWith('u1', 'b1', {
+            index: 1,
+            attempt: 2,
+            status: 'failed',
+            gateIssues: ['nope'],
+            tokensUsed: undefined,
+            // Falls back to the run's model handle when the record omits one.
+            model: 'gpt-x',
+        });
+    });
+
+    it('swallows a history write failure (fail-soft): recordAttempt never rejects', async () => {
+        mockRecordAttempt.mockRejectedValue(new Error('mongo down'));
+        const deps = buildAuthorDeps({ ...baseInput, generator: fakeGenerator('x', 1) });
+        // A rejected history write must NOT propagate — authoring must not abort.
+        await expect(
+            deps.recordAttempt!({ index: 0, attempt: 1, status: 'accepted', gateIssues: [] })
+        ).resolves.toBeUndefined();
+    });
+
+    it('an accepted chapter is NOT lost when its history write throws (fail-soft end-to-end)', async () => {
+        mockGetBible.mockResolvedValue({ content: 'S', agentId: 'a', bookId: 'b', label: 'l', limit: 1 });
+        mockSaveChapter.mockResolvedValue({});
+        mockUpdateBible.mockResolvedValue({});
+        mockRecordAttempt.mockRejectedValue(new Error('mongo down'));
+        const deps = buildAuthorDeps({ ...baseInput, generator: fakeGenerator('prose', 1) });
+        const res = await runChapterLoop([{ index: 0, intent: 'One' }], deps);
+        expect(res.status).toBe('complete');
+        expect(res.chapters[0].status).toBe('accepted');
+        // The chapter was saved even though its attempt-history write failed.
+        expect(mockSaveChapter).toHaveBeenCalledTimes(1);
     });
 });
 

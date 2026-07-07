@@ -80,6 +80,22 @@ export interface GateResult {
     issues: string[];
 }
 
+/** One try's gate outcome, recorded for per-chapter run history (observability). */
+export interface AttemptRecord {
+    /** Chapter index within the plan (0-based). */
+    index: number;
+    /** 1-based try number (1 = first draft, 2 = first regen, ...). */
+    attempt: number;
+    /** Whether this try cleared the done-gate. */
+    status: 'accepted' | 'failed';
+    /** Bounded gate issues from this try (empty when accepted). */
+    gateIssues?: string[];
+    /** Output tokens billed for this try, if known. */
+    tokensUsed?: number;
+    /** Model handle this try used, if known. */
+    model?: string;
+}
+
 /** Injected dependencies — the effectful edges of the otherwise-pure loop. */
 export interface AuthorDeps {
     /** Generate a chapter draft. Mocked in tests; real impl is a model call. */
@@ -92,6 +108,12 @@ export interface AuthorDeps {
     saveChapter: (chapter: SavedChapter) => Promise<void>;
     /** Fold an accepted chapter's summary into the bible (D2 updateBibleBlock). */
     updateBible: (acceptedChapter: SavedChapter, priorBible: string) => Promise<void>;
+    /**
+     * OPTIONAL, fail-soft: record one try's gate outcome for run history. Never
+     * part of the loop's control flow — a rejected write must not affect authoring.
+     * Undefined ⇒ no history is recorded (back-compat with callers/tests without it).
+     */
+    recordAttempt?: (record: AttemptRecord) => Promise<void>;
     /** The user's WRITING.md voice content (read once by the caller). */
     writingMd: string;
 }
@@ -130,6 +152,13 @@ export interface AuthorRunOptions {
     failurePolicy?: FailurePolicy;
     /** Fiction path passes null; the D4 non-fiction path will supply facts. */
     facts?: (chapter: PlannedChapter) => Promise<string | null>;
+    /**
+     * Resumability: chapter indices already accepted in a prior run. These are
+     * SKIPPED — not regenerated, saved, gated, or folded into the bible again —
+     * and reported as accepted so the run's completeness still counts them.
+     * Default empty ⇒ author every chapter (current behavior).
+     */
+    alreadyAccepted?: number[];
 }
 
 /**
@@ -161,10 +190,27 @@ export async function runChapterLoop(
     }
     const failurePolicy: FailurePolicy = options.failurePolicy ?? 'halt';
     const factsFor = options.facts ?? (async () => null);
+    const alreadyAccepted = new Set(options.alreadyAccepted ?? []);
 
     const chapters: ChapterOutcome[] = [];
 
     for (const chapter of plan) {
+        // Resume: a chapter accepted in a prior run is kept as-is. Skip generation,
+        // the gate, the save, and the bible fold (its content already lives in the
+        // Chapter model and its summary is already folded into the persisted bible)
+        // — but still count it accepted so completeness sees the whole plan.
+        if (alreadyAccepted.has(chapter.index)) {
+            chapters.push({
+                index: chapter.index,
+                intent: chapter.intent,
+                status: 'accepted',
+                attempts: 0,
+                content: '',
+                issues: [],
+            });
+            continue;
+        }
+
         // Read the coherence spine fresh — it reflects every accepted chapter so far.
         const bible = await deps.readBible();
         const facts = await factsFor(chapter);
@@ -198,6 +244,13 @@ export async function runChapterLoop(
                 // Bible is updated ONLY after acceptance — a rejected draft never
                 // contaminates the spine. Pass the pre-update bible for context.
                 await deps.updateBible(saved, bible);
+                // Fail-soft history (never part of control flow).
+                await deps.recordAttempt?.({
+                    index: chapter.index,
+                    attempt: attempt + 1,
+                    status: 'accepted',
+                    gateIssues: [],
+                });
                 chapters.push({
                     index: chapter.index,
                     intent: chapter.intent,
@@ -209,7 +262,13 @@ export async function runChapterLoop(
                 break;
             }
 
-            // Failed this attempt; feed issues back and (maybe) regenerate.
+            // Failed this attempt; record it, feed issues back, and (maybe) regenerate.
+            await deps.recordAttempt?.({
+                index: chapter.index,
+                attempt: attempt + 1,
+                status: 'failed',
+                gateIssues: gate.issues,
+            });
             priorIssues = gate.issues;
             attempt += 1;
         }

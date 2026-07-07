@@ -11,6 +11,8 @@ const {
     mockChapterFindOne,
     mockChapterCreate,
     mockChapterDeleteMany,
+    mockAttemptFind,
+    mockAttemptCreate,
 } = vi.hoisted(() => ({
     mockBookCreate: vi.fn(),
     mockBookFind: vi.fn(),
@@ -20,6 +22,8 @@ const {
     mockChapterFindOne: vi.fn(),
     mockChapterCreate: vi.fn(),
     mockChapterDeleteMany: vi.fn(),
+    mockAttemptFind: vi.fn(),
+    mockAttemptCreate: vi.fn(),
 }));
 
 vi.mock('@/models/Book', () => ({
@@ -42,6 +46,13 @@ vi.mock('@/models/Chapter', () => ({
     CHAPTER_STATUSES: ['accepted', 'failed'],
 }));
 
+vi.mock('@/models/ChapterAttempt', () => ({
+    default: {
+        find: mockAttemptFind,
+        create: mockAttemptCreate,
+    },
+}));
+
 import {
     parseCreateBook,
     createBook,
@@ -51,9 +62,12 @@ import {
     resetBookToDraft,
     getAcceptedChapters,
     saveChapterRecord,
+    recordChapterAttempt,
+    listChapterAttempts,
     setBookStatus,
     BookServiceError,
     MAX_TITLE_LEN,
+    MAX_CHAPTER_ATTEMPTS,
 } from './book-service';
 
 const OUTLINE = '# Novel\n\n## Chapter 1\n- beat a\n\n## Chapter 2\n- beat b\n';
@@ -278,6 +292,69 @@ describe('saveChapterRecord', () => {
         await expect(
             saveChapterRecord('user-1', 'b1', { ...chapter, status: 'bogus' as never })
         ).rejects.toThrow(/Invalid chapter status/);
+    });
+});
+
+describe('recordChapterAttempt', () => {
+    it('creates an owner-scoped attempt row with a bounded issue summary', async () => {
+        mockAttemptCreate.mockResolvedValue({ _id: 'a1' });
+        await recordChapterAttempt('user-1', 'b1', {
+            index: 0,
+            attempt: 2,
+            status: 'failed',
+            gateIssues: ['too flat'],
+            tokensUsed: 123,
+            model: 'gpt-x',
+        });
+        expect(mockAttemptCreate).toHaveBeenCalledWith({
+            userId: 'user-1',
+            bookId: 'b1',
+            index: 0,
+            attempt: 2,
+            status: 'failed',
+            gateIssues: ['too flat'],
+            tokensUsed: 123,
+            // The domain `model` field is persisted as the `modelHandle` column.
+            modelHandle: 'gpt-x',
+        });
+    });
+
+    it('defaults gateIssues to an empty array when omitted', async () => {
+        mockAttemptCreate.mockResolvedValue({ _id: 'a1' });
+        await recordChapterAttempt('user-1', 'b1', { index: 1, attempt: 1, status: 'accepted' });
+        expect(mockAttemptCreate).toHaveBeenCalledWith(
+            expect.objectContaining({ gateIssues: [] })
+        );
+    });
+
+    it('rejects an invalid status (and requires userId/bookId)', async () => {
+        await expect(
+            recordChapterAttempt('user-1', 'b1', { index: 0, attempt: 1, status: 'bogus' as never })
+        ).rejects.toThrow(/Invalid chapter status/);
+        await expect(
+            recordChapterAttempt('', 'b1', { index: 0, attempt: 1, status: 'accepted' })
+        ).rejects.toThrow(BookServiceError);
+        await expect(
+            recordChapterAttempt('user-1', '', { index: 0, attempt: 1, status: 'accepted' })
+        ).rejects.toThrow(BookServiceError);
+    });
+});
+
+describe('listChapterAttempts', () => {
+    it('lists an owned book\'s attempts newest-first, bounded', async () => {
+        const limit = vi.fn().mockResolvedValue([{ _id: 'a2' }, { _id: 'a1' }]);
+        const sort = vi.fn().mockReturnValue({ limit });
+        mockAttemptFind.mockReturnValue({ sort });
+        const res = await listChapterAttempts('user-1', 'b1');
+        expect(mockAttemptFind).toHaveBeenCalledWith({ userId: 'user-1', bookId: 'b1' });
+        expect(sort).toHaveBeenCalledWith({ createdAt: -1 });
+        expect(limit).toHaveBeenCalledWith(MAX_CHAPTER_ATTEMPTS);
+        expect(res).toHaveLength(2);
+    });
+
+    it('requires userId and bookId', async () => {
+        await expect(listChapterAttempts('', 'b1')).rejects.toThrow(BookServiceError);
+        await expect(listChapterAttempts('user-1', '')).rejects.toThrow(BookServiceError);
     });
 });
 

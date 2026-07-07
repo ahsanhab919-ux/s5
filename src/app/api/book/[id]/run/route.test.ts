@@ -6,6 +6,7 @@ vi.mock('@/lib/server-auth', () => ({ getAuthenticatedUser: vi.fn() }));
 const {
     mockClaim,
     mockSetStatus,
+    mockGetAccepted,
     mockRunLoop,
     mockBuildDeps,
     mockEnsureBible,
@@ -15,6 +16,7 @@ const {
 } = vi.hoisted(() => ({
     mockClaim: vi.fn(),
     mockSetStatus: vi.fn(),
+    mockGetAccepted: vi.fn(),
     mockRunLoop: vi.fn(),
     mockBuildDeps: vi.fn(),
     mockEnsureBible: vi.fn(),
@@ -28,6 +30,7 @@ vi.mock('@/lib/book/book-service', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@/lib/book/book-service')>()),
     claimBookForRun: mockClaim,
     setBookStatus: mockSetStatus,
+    getAcceptedChapters: mockGetAccepted,
 }));
 // Keep the real runChapterLoop errors/types; mock the loop itself.
 vi.mock('@/lib/book/author', async (importOriginal) => ({
@@ -89,6 +92,8 @@ beforeEach(() => {
     mockEnsureBible.mockResolvedValue({});
     mockBuildDeps.mockReturnValue({ writingMd: 'x' });
     mockSetStatus.mockResolvedValue({});
+    // Default: no prior accepted chapters (fresh run authors the whole plan).
+    mockGetAccepted.mockResolvedValue([]);
 });
 
 describe('POST /api/book/[id]/run', () => {
@@ -195,6 +200,58 @@ describe('POST /api/book/[id]/run', () => {
         expect(res.data.status).toBe('failed');
         expect(mockSetStatus).toHaveBeenCalledTimes(1);
         expect(mockSetStatus).toHaveBeenCalledWith('user-1', 'b1', 'failed');
+    });
+
+    it('resume: passes already-accepted indices to the loop and counts them toward completion', async () => {
+        (getAuthenticatedUser as any).mockResolvedValue(authed);
+        mockUseByokKey.mockResolvedValue('sk-stored');
+        // A two-chapter plan; chapter 0 was accepted in a prior partial run.
+        mockClaim.mockResolvedValue(
+            claimedBook({ plan: [{ index: 0, intent: 'Opening', beats: [] }, { index: 1, intent: 'Middle', beats: [] }] })
+        );
+        mockGetAccepted.mockResolvedValue([{ index: 0 }]);
+        // The loop skips index 0 (attempts 0) and authors index 1.
+        mockRunLoop.mockResolvedValue({
+            status: 'complete',
+            haltedAtIndex: null,
+            chapters: [
+                { index: 0, intent: 'Opening', status: 'accepted', attempts: 0, content: '', issues: [] },
+                { index: 1, intent: 'Middle', status: 'accepted', attempts: 1, content: 'c', issues: [] },
+            ],
+        });
+        const res: any = await POST(req({ provider: 'openai' }), { params });
+        expect(res.status).toBe(200);
+        expect(res.data.status).toBe('complete');
+        expect(res.data.accepted).toBe(2);
+        // The pre-accepted index is threaded into the loop as a skip list.
+        expect(mockRunLoop).toHaveBeenCalledWith(
+            expect.any(Array),
+            expect.anything(),
+            expect.objectContaining({ failurePolicy: 'halt', alreadyAccepted: [0] })
+        );
+        expect(mockSetStatus).toHaveBeenCalledWith('user-1', 'b1', 'complete');
+    });
+
+    it('resume: a fully-accepted re-run does zero generation and ends complete', async () => {
+        (getAuthenticatedUser as any).mockResolvedValue(authed);
+        mockUseByokKey.mockResolvedValue('sk-stored');
+        // Single-chapter plan, already accepted.
+        mockClaim.mockResolvedValue(claimedBook());
+        mockGetAccepted.mockResolvedValue([{ index: 0 }]);
+        mockRunLoop.mockResolvedValue({
+            status: 'complete',
+            haltedAtIndex: null,
+            chapters: [{ index: 0, intent: 'Opening', status: 'accepted', attempts: 0, content: '', issues: [] }],
+        });
+        const res: any = await POST(req({ provider: 'openai' }), { params });
+        expect(res.status).toBe(200);
+        expect(res.data.status).toBe('complete');
+        expect(res.data.accepted).toBe(1);
+        expect(mockRunLoop).toHaveBeenCalledWith(
+            expect.any(Array),
+            expect.anything(),
+            expect.objectContaining({ alreadyAccepted: [0] })
+        );
     });
 
     it('maps a BookRunError (e.g. over budget) to 400 and resets the book to failed', async () => {

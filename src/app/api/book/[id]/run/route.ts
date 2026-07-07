@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/server-auth';
-import { claimBookForRun, setBookStatus, BookServiceError } from '@/lib/book/book-service';
+import {
+    claimBookForRun,
+    setBookStatus,
+    getAcceptedChapters,
+    BookServiceError,
+} from '@/lib/book/book-service';
 import { runChapterLoop, BookAuthorError, type PlannedChapter } from '@/lib/book/author';
 import { buildAuthorDeps, BookRunError } from '@/lib/book/provider';
 import { ensureBibleBlock, BookBibleError } from '@/lib/book/bible';
@@ -120,7 +125,16 @@ export async function POST(
             model: model ?? profile.modelHandle,
         });
 
-        const result = await runChapterLoop(plan, deps, { failurePolicy: 'halt' });
+        // Resume: chapters already accepted (e.g. from a prior partial run) are
+        // skipped, never re-generated or overwritten. They still count toward the
+        // plan's completeness below, so a fully-authored re-run does zero work and
+        // ends 'complete'.
+        const alreadyAccepted = (await getAcceptedChapters(userId, bookId)).map((c) => c.index);
+
+        const result = await runChapterLoop(plan, deps, {
+            failurePolicy: 'halt',
+            alreadyAccepted,
+        });
 
         const accepted = result.chapters.filter((c) => c.status === 'accepted').length;
         const failed = result.chapters.filter((c) => c.status === 'failed').length;

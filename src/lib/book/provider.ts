@@ -40,9 +40,10 @@ import {
 import { type ByokProviderName } from '@/lib/re-educator/byok';
 import { buildReEducatorGate, type ReEducatorGateOptions } from './gate';
 import { getBibleBlock, updateBibleBlock, parseBible, renderBible } from './bible';
-import { saveChapterRecord } from './book-service';
+import { saveChapterRecord, recordChapterAttempt } from './book-service';
 import type {
     AuthorDeps,
+    AttemptRecord,
     GenerateInput,
     GateResult,
     PlannedChapter,
@@ -295,6 +296,8 @@ export interface BuildAuthorDepsInput {
     persistBible?: (content: string) => Promise<void>;
     /** Chapter persist; defaults to saveChapterRecord(userId, bookId, ...). */
     saveChapter?: (chapter: SavedChapter) => Promise<void>;
+    /** Attempt-history write; defaults to a fail-soft recordChapterAttempt(...). */
+    recordAttempt?: (record: AttemptRecord) => Promise<void>;
     /** Injected in tests to avoid a real network in the default generator. */
     fetchImpl?: typeof fetch;
     /** Optional sink for per-call usage (ledger/telemetry). Never sees the key. */
@@ -386,6 +389,29 @@ export function buildAuthorDeps(input: BuildAuthorDepsInput): AuthorDeps {
         await persistBible(foldChapterIntoBible(accepted, priorBible));
     };
 
+    // FAIL-SOFT: attempt history is observability, not the source of truth. A
+    // rejected write here must NOT abort authoring or lose an accepted chapter
+    // (the intentional asymmetry with saveChapter, which fails loud). Log + continue.
+    const recordAttempt =
+        input.recordAttempt ??
+        (async (record: AttemptRecord): Promise<void> => {
+            try {
+                await recordChapterAttempt(input.userId, input.bookId, {
+                    index: record.index,
+                    attempt: record.attempt,
+                    status: record.status,
+                    gateIssues: record.gateIssues,
+                    tokensUsed: record.tokensUsed,
+                    model: record.model ?? input.model,
+                });
+            } catch (error) {
+                console.error(
+                    `Failed to record chapter attempt (book ${input.bookId}, chapter ${record.index}, try ${record.attempt}); continuing.`,
+                    error
+                );
+            }
+        });
+
     return {
         writingMd: input.writingMd,
         generateChapter,
@@ -393,6 +419,7 @@ export function buildAuthorDeps(input: BuildAuthorDepsInput): AuthorDeps {
         readBible,
         saveChapter,
         updateBible,
+        recordAttempt,
     };
 }
 
