@@ -170,6 +170,39 @@ export async function claimBookForRun(userId: string, bookId: string): Promise<I
     );
 }
 
+/**
+ * Reset an owned book back to `draft` so it can be re-run after a
+ * `failed`/`complete`/stuck-`authoring` state. The strict claim in
+ * `claimBookForRun` only accepts `draft`, so this is the human-in-the-loop
+ * counterpart that re-arms a book — deliberately explicit, not a side effect of
+ * hitting run again.
+ *
+ * Order matters: delete the book's Chapter docs FIRST, then flip status to
+ * `draft`. A crash between the two leaves a non-draft book with no chapters
+ * (still not runnable, safe), never a `draft` book with stale accepted chapters
+ * (which a re-run would treat as already-done). Owner-scoped throughout.
+ */
+export async function resetBookToDraft(userId: string, bookId: string): Promise<IBook> {
+    if (!userId) throw new BookServiceError('resetBookToDraft: userId is required');
+    if (!bookId) throw new BookServiceError('resetBookToDraft: bookId is required');
+    await dbConnect();
+    // Confirm ownership up front so we never delete chapters for a book the
+    // caller doesn't own (the deleteMany is userId-scoped too, but this keeps
+    // the 404 contract crisp before any mutation).
+    const existing = await Book.findOne({ _id: bookId, userId });
+    if (!existing) throw new BookServiceError('Book not found.', true);
+
+    // Clear prior chapters so a re-run starts clean, THEN flip to draft.
+    await Chapter.deleteMany({ bookId, userId });
+    const reset = await Book.findOneAndUpdate(
+        { _id: bookId, userId },
+        { $set: { status: 'draft' } },
+        { new: true }
+    );
+    if (!reset) throw new BookServiceError('Book not found.', true);
+    return reset;
+}
+
 /** Fetch the accepted chapters of an owned book, in reading order. */
 export async function getAcceptedChapters(
     userId: string,

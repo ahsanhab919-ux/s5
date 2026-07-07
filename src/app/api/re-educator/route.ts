@@ -208,3 +208,59 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Failed to run Re-educator.' }, { status: 500 });
     }
 }
+
+/** Default/most a single list page returns (bounds an unpaged scan). */
+const DEFAULT_LIST_LIMIT = 50;
+const MAX_LIST_LIMIT = 100;
+
+/**
+ * GET /api/re-educator — list the authenticated user's runs, newest first.
+ *
+ * Read side of the ledger: every POST persists a run, and this surfaces the
+ * user's own history. Owner-scoped (find by userId) — the same IDOR discipline
+ * as the write path. Backed by the model's { userId, createdAt: -1 } index.
+ *
+ * Returns a SUMMARY per run (runId, createdAt, mode, profile, entryCount,
+ * head/genesis hashes, writingMdVersion) — deliberately NOT the full `ledger`
+ * blob, which carries the manuscript edit chain (large + content-bearing). Fetch
+ * a single run's full ledger via GET /api/re-educator/[runId].
+ *
+ * Query: ?limit=<1..100> (default 50).
+ * Returns: { runs: [...] }
+ */
+export async function GET(request: Request) {
+    try {
+        const user = await getAuthenticatedUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = String(user._id || user.id);
+
+        const raw = Number(new URL(request.url).searchParams.get('limit'));
+        const limit =
+            Number.isFinite(raw) && raw > 0
+                ? Math.min(Math.floor(raw), MAX_LIST_LIMIT)
+                : DEFAULT_LIST_LIMIT;
+
+        await dbConnect();
+        const docs = await ReEducatorLedger.find({ userId })
+            .sort({ createdAt: -1 })
+            .limit(limit);
+
+        const runs = docs.map((d) => ({
+            runId: String(d._id),
+            createdAt: d.createdAt,
+            mode: d.mode,
+            profile: d.profile,
+            entryCount: d.entryCount,
+            headHash: d.headHash,
+            genesisHash: d.genesisHash,
+            writingMdVersion: d.writingMdVersion,
+        }));
+
+        return NextResponse.json({ runs });
+    } catch (error) {
+        console.error('Error listing Re-educator runs:', error);
+        return NextResponse.json({ error: 'Failed to list Re-educator runs.' }, { status: 500 });
+    }
+}

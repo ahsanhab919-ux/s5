@@ -10,6 +10,7 @@ const {
     mockChapterFind,
     mockChapterFindOne,
     mockChapterCreate,
+    mockChapterDeleteMany,
 } = vi.hoisted(() => ({
     mockBookCreate: vi.fn(),
     mockBookFind: vi.fn(),
@@ -18,6 +19,7 @@ const {
     mockChapterFind: vi.fn(),
     mockChapterFindOne: vi.fn(),
     mockChapterCreate: vi.fn(),
+    mockChapterDeleteMany: vi.fn(),
 }));
 
 vi.mock('@/models/Book', () => ({
@@ -31,7 +33,12 @@ vi.mock('@/models/Book', () => ({
 }));
 
 vi.mock('@/models/Chapter', () => ({
-    default: { find: mockChapterFind, findOne: mockChapterFindOne, create: mockChapterCreate },
+    default: {
+        find: mockChapterFind,
+        findOne: mockChapterFindOne,
+        create: mockChapterCreate,
+        deleteMany: mockChapterDeleteMany,
+    },
     CHAPTER_STATUSES: ['accepted', 'failed'],
 }));
 
@@ -41,6 +48,7 @@ import {
     listBooks,
     getBook,
     claimBookForRun,
+    resetBookToDraft,
     getAcceptedChapters,
     saveChapterRecord,
     setBookStatus,
@@ -186,6 +194,43 @@ describe('claimBookForRun (atomic draft → authoring)', () => {
     it('requires userId and bookId', async () => {
         await expect(claimBookForRun('', 'b1')).rejects.toThrow(BookServiceError);
         await expect(claimBookForRun('user-1', '')).rejects.toThrow(BookServiceError);
+    });
+});
+
+describe('resetBookToDraft (re-arm: clear chapters → draft)', () => {
+    it('deletes the book\'s chapters THEN sets draft, returning the updated book', async () => {
+        mockBookFindOne.mockResolvedValue({ _id: 'b1', userId: 'user-1', status: 'failed' });
+        mockChapterDeleteMany.mockResolvedValue({ deletedCount: 2 });
+        mockBookFindOneAndUpdate.mockResolvedValue({ _id: 'b1', userId: 'user-1', status: 'draft' });
+
+        const b = await resetBookToDraft('user-1', 'b1');
+
+        // Chapters are cleared owner-scoped so a re-run starts clean.
+        expect(mockChapterDeleteMany).toHaveBeenCalledWith({ bookId: 'b1', userId: 'user-1' });
+        // Status flips to draft via an owner-scoped conditional write.
+        expect(mockBookFindOneAndUpdate).toHaveBeenCalledWith(
+            { _id: 'b1', userId: 'user-1' },
+            { $set: { status: 'draft' } },
+            { new: true }
+        );
+        expect(b.status).toBe('draft');
+        // Delete must precede the status flip (crash-safe ordering).
+        expect(mockChapterDeleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+            mockBookFindOneAndUpdate.mock.invocationCallOrder[0]
+        );
+    });
+
+    it('throws not-found (404-class) for a missing/foreign book, deleting nothing', async () => {
+        mockBookFindOne.mockResolvedValue(null);
+        await expect(resetBookToDraft('user-1', 'nope')).rejects.toMatchObject({ notFound: true });
+        // Ownership check fails before any mutation.
+        expect(mockChapterDeleteMany).not.toHaveBeenCalled();
+        expect(mockBookFindOneAndUpdate).not.toHaveBeenCalled();
+    });
+
+    it('requires userId and bookId', async () => {
+        await expect(resetBookToDraft('', 'b1')).rejects.toThrow(BookServiceError);
+        await expect(resetBookToDraft('user-1', '')).rejects.toThrow(BookServiceError);
     });
 });
 

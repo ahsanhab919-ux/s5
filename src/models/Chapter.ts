@@ -47,6 +47,9 @@ const ChapterSchema = new mongoose.Schema(
 // A book cannot have two chapters at the same index.
 ChapterSchema.index({ bookId: 1, index: 1 }, { unique: true });
 
+// Backs getAcceptedChapters' hottest read: { userId, bookId, status: 'accepted' }.
+ChapterSchema.index({ bookId: 1, userId: 1, status: 1 });
+
 const Chapter =
     (mongoose.models.Chapter as AccessibleRecordModel<IChapter>) ||
     mongoose.model<IChapter, AccessibleRecordModel<IChapter>>('Chapter', ChapterSchema);
