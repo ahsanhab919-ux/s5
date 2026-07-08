@@ -302,6 +302,71 @@ export async function listChapterAttempts(
         .limit(MAX_CHAPTER_ATTEMPTS);
 }
 
+/** One chapter's latest known state, derived from its attempt history. */
+export interface ChapterProgressItem {
+    index: number;
+    status: ChapterStatusValue;
+    /** The (1-based) try number of the latest attempt for this index. */
+    attempt: number;
+}
+
+/** A compact, prose-free progress summary for a book run (status-poll shape). */
+export interface ChapterProgress {
+    /** Chapters planned (plan length), or distinct indices touched if no plan. */
+    total: number;
+    /** Distinct chapter indices whose latest attempt was accepted. */
+    accepted: number;
+    /** Distinct chapter indices whose latest attempt failed. */
+    failed: number;
+    /** Highest chapter index with any recorded attempt, or null if none. */
+    lastIndex: number | null;
+    /** Latest state per touched index, ascending. NO prose, NO gate issues. */
+    perIndex: ChapterProgressItem[];
+}
+
+/**
+ * Compact, owner-scoped progress for a book run, derived from its ChapterAttempt
+ * history (the source Wave 2 already persists — this only READS it). For each
+ * touched index we keep the LATEST attempt (highest attempt number, newest on a
+ * tie) and its accepted/failed status. Bounded by MAX_CHAPTER_ATTEMPTS like
+ * listChapterAttempts. Deliberately withholds gate-issue detail and all prose so
+ * the status endpoint stays a lightweight poll. Returns null when the book is not
+ * found/owned so the route can 404.
+ */
+export async function getChapterProgress(
+    userId: string,
+    bookId: string
+): Promise<ChapterProgress | null> {
+    if (!userId) throw new BookServiceError('getChapterProgress: userId is required');
+    if (!bookId) throw new BookServiceError('getChapterProgress: bookId is required');
+    await dbConnect();
+    const book = await Book.findOne({ _id: bookId, userId });
+    if (!book) return null;
+
+    const attempts = await ChapterAttempt.find({ userId, bookId })
+        .sort({ createdAt: -1 })
+        .limit(MAX_CHAPTER_ATTEMPTS);
+
+    // Reduce to the latest attempt per index. Rows arrive newest-first, so a tie
+    // on attempt number keeps the first (newest) seen; a strictly higher attempt
+    // number always wins.
+    const latest = new Map<number, ChapterProgressItem>();
+    for (const a of attempts) {
+        const seen = latest.get(a.index);
+        if (!seen || a.attempt > seen.attempt) {
+            latest.set(a.index, { index: a.index, status: a.status, attempt: a.attempt });
+        }
+    }
+
+    const perIndex = Array.from(latest.values()).sort((x, y) => x.index - y.index);
+    const accepted = perIndex.filter((p) => p.status === 'accepted').length;
+    const failed = perIndex.filter((p) => p.status === 'failed').length;
+    const lastIndex = perIndex.length > 0 ? perIndex[perIndex.length - 1].index : null;
+    const total = Array.isArray(book.plan) && book.plan.length > 0 ? book.plan.length : perIndex.length;
+
+    return { total, accepted, failed, lastIndex, perIndex };
+}
+
 /** Update a book's lifecycle status (owner-scoped). */
 export async function setBookStatus(
     userId: string,

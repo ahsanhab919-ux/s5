@@ -64,6 +64,7 @@ import {
     saveChapterRecord,
     recordChapterAttempt,
     listChapterAttempts,
+    getChapterProgress,
     setBookStatus,
     BookServiceError,
     MAX_TITLE_LEN,
@@ -355,6 +356,82 @@ describe('listChapterAttempts', () => {
     it('requires userId and bookId', async () => {
         await expect(listChapterAttempts('', 'b1')).rejects.toThrow(BookServiceError);
         await expect(listChapterAttempts('user-1', '')).rejects.toThrow(BookServiceError);
+    });
+});
+
+describe('getChapterProgress (compact, prose-free run progress)', () => {
+    /** Wire the ChapterAttempt.find().sort().limit() chain to a fixed row set. */
+    function stubAttempts(rows: unknown[]) {
+        const limit = vi.fn().mockResolvedValue(rows);
+        const sort = vi.fn().mockReturnValue({ limit });
+        mockAttemptFind.mockReturnValue({ sort });
+        return { sort, limit };
+    }
+
+    it('aggregates the LATEST attempt per index and rolls up accepted/failed', async () => {
+        mockBookFindOne.mockResolvedValue({
+            _id: 'b1',
+            userId: 'user-1',
+            plan: [{ index: 0 }, { index: 1 }, { index: 2 }],
+        });
+        // Newest-first rows (as the query returns them): index 0 accepted on its
+        // 2nd (latest) try after a failed 1st; index 1 failed on its latest try.
+        stubAttempts([
+            { index: 1, attempt: 1, status: 'failed', gateIssues: ['flat'] },
+            { index: 0, attempt: 2, status: 'accepted', gateIssues: [] },
+            { index: 0, attempt: 1, status: 'failed', gateIssues: ['thin'] },
+        ]);
+
+        const p = await getChapterProgress('user-1', 'b1');
+        expect(mockBookFindOne).toHaveBeenCalledWith({ _id: 'b1', userId: 'user-1' });
+        expect(p).not.toBeNull();
+        expect(p!.total).toBe(3); // plan length
+        expect(p!.accepted).toBe(1);
+        expect(p!.failed).toBe(1);
+        expect(p!.lastIndex).toBe(1);
+        // Latest-per-index, ascending. Index 0 reflects its 2nd (accepted) try.
+        expect(p!.perIndex).toEqual([
+            { index: 0, status: 'accepted', attempt: 2 },
+            { index: 1, status: 'failed', attempt: 1 },
+        ]);
+        // Compact: the shape carries NO gate-issue detail or prose.
+        expect(JSON.stringify(p)).not.toContain('flat');
+        expect(JSON.stringify(p)).not.toContain('gateIssues');
+    });
+
+    it('returns null when the book is not found/owned (route maps to 404)', async () => {
+        mockBookFindOne.mockResolvedValue(null);
+        const p = await getChapterProgress('user-1', 'nope');
+        expect(p).toBeNull();
+        // No attempt query is issued for a book the caller does not own.
+        expect(mockAttemptFind).not.toHaveBeenCalled();
+    });
+
+    it('bounds the underlying attempt query (MAX_CHAPTER_ATTEMPTS) and sorts newest-first', async () => {
+        mockBookFindOne.mockResolvedValue({ _id: 'b1', userId: 'user-1', plan: [{ index: 0 }] });
+        const { sort, limit } = stubAttempts([]);
+        const p = await getChapterProgress('user-1', 'b1');
+        expect(mockAttemptFind).toHaveBeenCalledWith({ userId: 'user-1', bookId: 'b1' });
+        expect(sort).toHaveBeenCalledWith({ createdAt: -1 });
+        expect(limit).toHaveBeenCalledWith(MAX_CHAPTER_ATTEMPTS);
+        // No attempts yet: nothing touched, but total still reflects the plan.
+        expect(p).toEqual({ total: 1, accepted: 0, failed: 0, lastIndex: null, perIndex: [] });
+    });
+
+    it('falls back to distinct touched indices for total when the book has no plan', async () => {
+        mockBookFindOne.mockResolvedValue({ _id: 'b1', userId: 'user-1', plan: [] });
+        stubAttempts([
+            { index: 0, attempt: 1, status: 'accepted', gateIssues: [] },
+            { index: 3, attempt: 1, status: 'accepted', gateIssues: [] },
+        ]);
+        const p = await getChapterProgress('user-1', 'b1');
+        expect(p!.total).toBe(2); // two distinct indices touched
+        expect(p!.lastIndex).toBe(3);
+    });
+
+    it('requires userId and bookId', async () => {
+        await expect(getChapterProgress('', 'b1')).rejects.toThrow(BookServiceError);
+        await expect(getChapterProgress('user-1', '')).rejects.toThrow(BookServiceError);
     });
 });
 

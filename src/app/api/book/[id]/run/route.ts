@@ -38,8 +38,17 @@ import { useByokKey } from '@/lib/second-me/key-custody';
  * `x-second-me-key` header (the same header the keys route accepts). It is never
  * logged or echoed.
  *
+ * ASYNC (Wave 3): the run is a long-lived, multi-chapter model job. The claim
+ * (draft → authoring) and all request-scoped setup (auth, key capture, deps) stay
+ * synchronous, but `runChapterLoop` is kicked off as an in-process background task
+ * and the route returns 202 immediately. The book's terminal status
+ * (complete/failed) is written by that background task; per-chapter progress is
+ * persisted as it goes (recordChapterAttempt) and read back via GET
+ * /api/book/[id]/status. Valid because the standalone Node server outlives the
+ * HTTP response — no queue/worker needed.
+ *
  * Body: { provider: 'openai'|'anthropic', model?: string }
- * Returns: { status, accepted, failed, haltedAtIndex, chapters: [{index,status,attempts}] }
+ * Returns: 202 { bookId, status: 'authoring' }
  */
 
 export async function POST(
@@ -131,31 +140,41 @@ export async function POST(
         // ends 'complete'.
         const alreadyAccepted = (await getAcceptedChapters(userId, bookId)).map((c) => c.index);
 
-        const result = await runChapterLoop(plan, deps, {
-            failurePolicy: 'halt',
-            alreadyAccepted,
-        });
+        // Kick off the run as an in-process background task and return 202. The
+        // book is already `authoring` (the claim did that), so the client polls
+        // GET /status for progress; this task writes only the TERMINAL status.
+        // `userId`/`bookId`/`deps` are locals (the BYOK key is already captured
+        // into `deps`), so nothing here reads request-scoped state. Mongoose is
+        // connected (the claim/getAcceptedChapters calls above did dbConnect).
+        const runUserId = userId;
+        const runBookId = bookId;
+        void (async () => {
+            try {
+                const result = await runChapterLoop(plan, deps, {
+                    failurePolicy: 'halt',
+                    alreadyAccepted,
+                });
+                const accepted = result.chapters.filter((c) => c.status === 'accepted').length;
+                const failed = result.chapters.filter((c) => c.status === 'failed').length;
+                const complete =
+                    result.status === 'complete' && failed === 0 && accepted === plan.length;
+                await setBookStatus(runUserId, runBookId, complete ? 'complete' : 'failed');
+            } catch (err) {
+                console.error('[book-run] background failure', runBookId, err);
+                try {
+                    await setBookStatus(runUserId, runBookId, 'failed');
+                } catch (e2) {
+                    console.error('[book-run] failed to set failed status', runBookId, e2);
+                }
+            }
+        })();
 
-        const accepted = result.chapters.filter((c) => c.status === 'accepted').length;
-        const failed = result.chapters.filter((c) => c.status === 'failed').length;
-        const complete = result.status === 'complete' && failed === 0 && accepted === plan.length;
-
-        await setBookStatus(userId, bookId, complete ? 'complete' : 'failed');
-
-        return NextResponse.json({
-            status: complete ? 'complete' : 'failed',
-            accepted,
-            failed,
-            haltedAtIndex: result.haltedAtIndex,
-            chapters: result.chapters.map((c) => ({
-                index: c.index,
-                status: c.status,
-                attempts: c.attempts,
-            })),
-        });
+        return NextResponse.json({ bookId, status: 'authoring' }, { status: 202 });
     } catch (error) {
-        // A run that threw after we marked it authoring must not linger as
-        // "authoring" — record the failure (best-effort; never mask the original).
+        // A synchronous throw AFTER we marked it authoring (deps build, bible,
+        // getAcceptedChapters) must not linger as "authoring" — record the failure
+        // (best-effort; never mask the original). Background-task failures are
+        // handled in the kickoff's own catch above.
         if (markedAuthoring && userId && bookId) {
             try {
                 await setBookStatus(userId, bookId, 'failed');

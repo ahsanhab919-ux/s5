@@ -67,6 +67,9 @@ import { BookRunError } from '@/lib/book/provider';
 const params = Promise.resolve({ id: 'b1' });
 const authed = { _id: 'user-1' };
 
+/** Drain the microtask queue so the fire-and-forget background run settles. */
+const flush = () => new Promise((resolve) => setImmediate(resolve));
+
 /** A Request-like object with a JSON body + header lookup. */
 function req(body: unknown, headers: Record<string, string> = {}) {
     return {
@@ -155,7 +158,7 @@ describe('POST /api/book/[id]/run', () => {
         expect(mockSetStatus).not.toHaveBeenCalled();
     });
 
-    it('happy path: atomically claims (draft→authoring), runs, sets complete', async () => {
+    it('happy path: claims (draft→authoring), returns 202, background sets complete', async () => {
         (getAuthenticatedUser as any).mockResolvedValue(authed);
         mockUseByokKey.mockResolvedValue('sk-stored');
         mockClaim.mockResolvedValue(claimedBook());
@@ -165,13 +168,15 @@ describe('POST /api/book/[id]/run', () => {
             chapters: [{ index: 0, intent: 'Opening', status: 'accepted', attempts: 1, content: 'c', issues: [] }],
         });
         const res: any = await POST(req({ provider: 'openai' }), { params });
-        expect(res.status).toBe(200);
-        expect(res.data.status).toBe('complete');
-        expect(res.data.accepted).toBe(1);
-        expect(res.data.failed).toBe(0);
-        // The claim performs the authoring transition; setBookStatus is used ONLY
-        // for the terminal transition now (no separate 'authoring' write).
+        // The response is an immediate 202 — the run continues in the background.
+        expect(res.status).toBe(202);
+        expect(res.data).toEqual({ bookId: 'b1', status: 'authoring' });
+        // The claim (draft→authoring) happens synchronously BEFORE the 202.
         expect(mockClaim).toHaveBeenCalledWith('user-1', 'b1');
+        // The terminal status is written by the background task (kicked off after
+        // the claim, settled by the flush below) — never by the synchronous path.
+        await flush();
+        expect(mockRunLoop).toHaveBeenCalledTimes(1);
         expect(mockSetStatus).toHaveBeenCalledTimes(1);
         expect(mockSetStatus).toHaveBeenCalledWith('user-1', 'b1', 'complete');
     });
@@ -181,12 +186,13 @@ describe('POST /api/book/[id]/run', () => {
         mockClaim.mockResolvedValue(claimedBook());
         mockRunLoop.mockResolvedValue({ status: 'complete', haltedAtIndex: null, chapters: [{ index: 0, intent: 'Opening', status: 'accepted', attempts: 1, content: 'c', issues: [] }] });
         const res: any = await POST(req({ provider: 'openai' }, { 'x-second-me-key': 'sk-header' }), { params });
-        expect(res.status).toBe(200);
+        expect(res.status).toBe(202);
         expect(mockUseByokKey).not.toHaveBeenCalled(); // header short-circuits custody
         expect(mockBuildDeps).toHaveBeenCalledWith(expect.objectContaining({ apiKey: 'sk-header' }));
+        await flush();
     });
 
-    it('marks the book failed when the run halts', async () => {
+    it('background: marks the book failed when the run halts', async () => {
         (getAuthenticatedUser as any).mockResolvedValue(authed);
         mockUseByokKey.mockResolvedValue('sk-stored');
         mockClaim.mockResolvedValue(claimedBook());
@@ -196,8 +202,8 @@ describe('POST /api/book/[id]/run', () => {
             chapters: [{ index: 0, intent: 'Opening', status: 'failed', attempts: 4, content: '', issues: ['x'] }],
         });
         const res: any = await POST(req({ provider: 'openai' }), { params });
-        expect(res.status).toBe(200);
-        expect(res.data.status).toBe('failed');
+        expect(res.status).toBe(202);
+        await flush();
         expect(mockSetStatus).toHaveBeenCalledTimes(1);
         expect(mockSetStatus).toHaveBeenCalledWith('user-1', 'b1', 'failed');
     });
@@ -220,9 +226,8 @@ describe('POST /api/book/[id]/run', () => {
             ],
         });
         const res: any = await POST(req({ provider: 'openai' }), { params });
-        expect(res.status).toBe(200);
-        expect(res.data.status).toBe('complete');
-        expect(res.data.accepted).toBe(2);
+        expect(res.status).toBe(202);
+        await flush();
         // The pre-accepted index is threaded into the loop as a skip list.
         expect(mockRunLoop).toHaveBeenCalledWith(
             expect.any(Array),
@@ -244,26 +249,45 @@ describe('POST /api/book/[id]/run', () => {
             chapters: [{ index: 0, intent: 'Opening', status: 'accepted', attempts: 0, content: '', issues: [] }],
         });
         const res: any = await POST(req({ provider: 'openai' }), { params });
-        expect(res.status).toBe(200);
-        expect(res.data.status).toBe('complete');
-        expect(res.data.accepted).toBe(1);
+        expect(res.status).toBe(202);
+        await flush();
         expect(mockRunLoop).toHaveBeenCalledWith(
             expect.any(Array),
             expect.anything(),
             expect.objectContaining({ alreadyAccepted: [0] })
         );
+        expect(mockSetStatus).toHaveBeenCalledWith('user-1', 'b1', 'complete');
     });
 
-    it('maps a BookRunError (e.g. over budget) to 400 and resets the book to failed', async () => {
+    it('background: a thrown run (e.g. over budget) is caught and resets to failed (no unhandled rejection)', async () => {
         (getAuthenticatedUser as any).mockResolvedValue(authed);
         mockUseByokKey.mockResolvedValue('sk-stored');
         mockClaim.mockResolvedValue(claimedBook());
         mockRunLoop.mockRejectedValue(new BookRunError('Run token budget exhausted.'));
+        // The run error happens AFTER 202, so the response is still a clean 202.
+        const res: any = await POST(req({ provider: 'openai' }), { params });
+        expect(res.status).toBe(202);
+        expect(mockClaim).toHaveBeenCalledWith('user-1', 'b1');
+
+        await flush();
+        // The background catch best-effort resets the authoring book to failed.
+        expect(mockSetStatus).toHaveBeenCalledTimes(1);
+        expect(mockSetStatus).toHaveBeenCalledWith('user-1', 'b1', 'failed');
+    });
+
+    it('synchronous setup failure (deps build) after claim resets to failed and surfaces the error', async () => {
+        (getAuthenticatedUser as any).mockResolvedValue(authed);
+        mockUseByokKey.mockResolvedValue('sk-stored');
+        mockClaim.mockResolvedValue(claimedBook());
+        // A throw during synchronous setup (before kickoff) still flows through the
+        // outer catch, which maps it and resets the claimed book to failed.
+        mockBuildDeps.mockImplementation(() => {
+            throw new BookRunError('deps wiring failed');
+        });
         const res: any = await POST(req({ provider: 'openai' }), { params });
         expect(res.status).toBe(400);
-        expect(res.data.error).toMatch(/budget/i);
-        // The claim set authoring; the catch best-effort resets to failed.
-        expect(mockClaim).toHaveBeenCalledWith('user-1', 'b1');
+        expect(res.data.error).toMatch(/deps wiring failed/i);
+        expect(mockRunLoop).not.toHaveBeenCalled();
         expect(mockSetStatus).toHaveBeenCalledWith('user-1', 'b1', 'failed');
     });
 });
