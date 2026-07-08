@@ -1,6 +1,6 @@
 import SvgColor from "@/components/common/SvgColor";
 import { PATH_ACCOUNT, PATH_TOOLS } from "@/config/route";
-import { PenLine, Presentation, Search, Table, Target, UserCog } from "lucide-react";
+import { BookOpen, PenLine, Presentation, Search, Table, Target, UserCog } from "lucide-react";
 import { ReactElement } from "react";
 
 const icon = (name: string): ReactElement => (
@@ -27,6 +27,7 @@ export const NAV_ICONS = {
   sheet_generation: <Table className="size-3.5 text-green-500 sm:size-4" />,
   deep_research: <Search className="size-3.5 text-green-500 sm:size-4" />,
   second_me: <UserCog className="size-3.5 text-emerald-500 sm:size-4" />,
+  book: <BookOpen className="size-3.5 text-indigo-500 sm:size-4" />,
 
 };
 
@@ -104,6 +105,14 @@ export const NAV_TOOLS = [
     iconColor: "#1976D2",
   },
   {
+    icon: NAV_ICONS.book,
+    title: "Book Authoring",
+    description: "Long-form book writer",
+    label: null,
+    link: "/book",
+    iconColor: "#6366F1",
+  },
+  {
     icon: NAV_ICONS.marketing_automation,
     title: "Marketing Automation",
     description: "Marketing automation tools",
@@ -153,6 +162,12 @@ export const NAV_ITEMS = [
         path: PATH_TOOLS.agents,
         icon: NAV_ICONS.agents,
         iconColor: "#1976D2",
+      },
+      {
+        title: "Book Authoring",
+        path: PATH_TOOLS.book,
+        icon: NAV_ICONS.book,
+        iconColor: "#6366F1",
       },
       {
         title: "Marketing Automation",

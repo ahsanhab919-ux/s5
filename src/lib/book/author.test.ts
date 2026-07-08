@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import {
     runChapterLoop,
+    authorSingleChapter,
     BookAuthorError,
     DEFAULT_MAX_REGEN,
     type AuthorDeps,
@@ -246,5 +247,84 @@ describe('DEFAULT_MAX_REGEN', () => {
     it('is a small positive integer', () => {
         expect(DEFAULT_MAX_REGEN).toBeGreaterThan(0);
         expect(Number.isInteger(DEFAULT_MAX_REGEN)).toBe(true);
+    });
+});
+
+describe('authorSingleChapter — targeted regenerate', () => {
+    it('rejects an empty plan', async () => {
+        await expect(authorSingleChapter([], makeDeps(), 0)).rejects.toThrow(BookAuthorError);
+    });
+
+    it('rejects missing dependency functions', async () => {
+        const bad = { ...makeDeps(), verifyChapter: undefined as never };
+        await expect(authorSingleChapter(plan, bad, 0)).rejects.toThrow(/verifyChapter/);
+    });
+
+    it('rejects a negative maxRegen', async () => {
+        await expect(authorSingleChapter(plan, makeDeps(), 0, { maxRegen: -1 })).rejects.toThrow(
+            /maxRegen/
+        );
+    });
+
+    it('throws when the index is outside the plan', async () => {
+        await expect(authorSingleChapter(plan, makeDeps(), 99)).rejects.toThrow(/index 99/);
+    });
+
+    it('authors ONLY the requested chapter, saving + folding it into the bible on accept', async () => {
+        const deps = makeDeps();
+        const outcome = await authorSingleChapter(plan, deps, 1);
+        expect(outcome.status).toBe('accepted');
+        expect(outcome.index).toBe(1);
+        // Exactly one chapter generated/saved/folded — the targeted index, not the plan.
+        expect(deps.generateChapter).toHaveBeenCalledTimes(1);
+        expect(deps.saveChapter).toHaveBeenCalledTimes(1);
+        expect(deps.updateBible).toHaveBeenCalledTimes(1);
+        expect(deps.saved).toHaveLength(1);
+        expect(deps.saved[0].index).toBe(1);
+    });
+
+    it('regenerates on gate failure then accepts, feeding prior issues back', async () => {
+        let calls = 0;
+        const verifyChapter = vi.fn(async (draft: string): Promise<GateResult> => {
+            calls += 1;
+            return calls < 2
+                ? { passed: false, text: draft, issues: ['fix pacing'] }
+                : { passed: true, text: draft, issues: [] };
+        });
+        const deps = makeDeps({ verifyChapter });
+        const outcome = await authorSingleChapter(plan, deps, 0);
+        expect(outcome.status).toBe('accepted');
+        expect(outcome.attempts).toBe(2);
+        expect(deps.generateChapter).toHaveBeenCalledTimes(2);
+    });
+
+    it('returns a failed outcome (no save, no bible fold) when regeneration is exhausted', async () => {
+        const verifyChapter = vi.fn(
+            async (draft: string): Promise<GateResult> => ({
+                passed: false,
+                text: draft,
+                issues: ['still broken'],
+            })
+        );
+        const deps = makeDeps({ verifyChapter });
+        const outcome = await authorSingleChapter(plan, deps, 0, { maxRegen: 1 });
+        expect(outcome.status).toBe('failed');
+        expect(outcome.attempts).toBe(2); // 1 + maxRegen
+        expect(outcome.issues).toEqual(['still broken']);
+        // A failed regen must NOT persist or contaminate the bible.
+        expect(deps.saveChapter).not.toHaveBeenCalled();
+        expect(deps.updateBible).not.toHaveBeenCalled();
+        expect(deps.saved).toHaveLength(0);
+    });
+
+    it('records each attempt (fail-soft history) for the targeted chapter', async () => {
+        const records: AttemptRecord[] = [];
+        const recordAttempt = vi.fn(async (r: AttemptRecord) => {
+            records.push(r);
+        });
+        const deps = makeDeps({ recordAttempt });
+        await authorSingleChapter(plan, deps, 0);
+        expect(records).toHaveLength(1);
+        expect(records[0]).toMatchObject({ index: 0, attempt: 1, status: 'accepted' });
     });
 });

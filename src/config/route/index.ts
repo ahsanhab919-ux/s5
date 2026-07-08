@@ -64,6 +64,7 @@ export const PATH_TOOLS = {
   agents: "/agents",
   marketing_automation: "/marketing-automation",
   second_me: "/second-me",
+  book: "/book",
   slide_generator: "/agents",
   deep_research: "/agents",
   data_analysis: "/agents",

@@ -211,89 +211,140 @@ export async function runChapterLoop(
             continue;
         }
 
-        // Read the coherence spine fresh — it reflects every accepted chapter so far.
-        const bible = await deps.readBible();
-        const facts = await factsFor(chapter);
+        const outcome = await authorChapterOnce(chapter, deps, maxRegen, factsFor);
+        chapters.push(outcome);
 
-        let attempt = 0;
-        let priorIssues: string[] | undefined;
-        let lastGate: GateResult | null = null;
-
-        // attempt 0 = first try; each failure that stays under the bound regenerates.
-        // Total tries = 1 + maxRegen.
-        while (attempt <= maxRegen) {
-            const draft = await deps.generateChapter({
-                chapter,
-                bible,
-                writingMd: deps.writingMd,
-                facts,
-                attempt,
-                priorIssues,
-            });
-            const gate = await deps.verifyChapter(draft, chapter);
-            lastGate = gate;
-
-            if (gate.passed) {
-                const saved: SavedChapter = {
-                    index: chapter.index,
-                    intent: chapter.intent,
-                    content: gate.text,
-                    attempts: attempt + 1,
-                };
-                await deps.saveChapter(saved);
-                // Bible is updated ONLY after acceptance — a rejected draft never
-                // contaminates the spine. Pass the pre-update bible for context.
-                await deps.updateBible(saved, bible);
-                // Fail-soft history (never part of control flow).
-                await deps.recordAttempt?.({
-                    index: chapter.index,
-                    attempt: attempt + 1,
-                    status: 'accepted',
-                    gateIssues: [],
-                });
-                chapters.push({
-                    index: chapter.index,
-                    intent: chapter.intent,
-                    status: 'accepted',
-                    attempts: attempt + 1,
-                    content: gate.text,
-                    issues: [],
-                });
-                break;
-            }
-
-            // Failed this attempt; record it, feed issues back, and (maybe) regenerate.
-            await deps.recordAttempt?.({
-                index: chapter.index,
-                attempt: attempt + 1,
-                status: 'failed',
-                gateIssues: gate.issues,
-            });
-            priorIssues = gate.issues;
-            attempt += 1;
+        if (outcome.status === 'failed' && failurePolicy === 'halt') {
+            return { status: 'halted', chapters, haltedAtIndex: chapter.index };
         }
-
-        // If we exited the loop without an accepted push for this chapter, it failed.
-        const accepted = chapters.find(
-            (c) => c.index === chapter.index && c.status === 'accepted'
-        );
-        if (!accepted) {
-            chapters.push({
-                index: chapter.index,
-                intent: chapter.intent,
-                status: 'failed',
-                attempts: maxRegen + 1,
-                content: lastGate?.text ?? '',
-                issues: lastGate?.issues ?? [],
-            });
-            if (failurePolicy === 'halt') {
-                return { status: 'halted', chapters, haltedAtIndex: chapter.index };
-            }
-            // 'skip' → continue to the next chapter without updating the bible.
-        }
+        // 'skip' → continue to the next chapter without updating the bible.
     }
 
     return { status: 'complete', chapters, haltedAtIndex: null };
+}
+
+/**
+ * Author ONE chapter end-to-end: read the bible fresh, generate → gate → regen
+ * while failing and under bound, then on pass save + fold into the bible and on
+ * exhaustion return a `failed` outcome (leaving any prior accepted chapter and the
+ * bible untouched). The single per-chapter engine shared by `runChapterLoop` and
+ * `authorSingleChapter` — one implementation of the gate/regen/persist logic, so
+ * the targeted regenerate path cannot drift from the full run.
+ */
+async function authorChapterOnce(
+    chapter: PlannedChapter,
+    deps: AuthorDeps,
+    maxRegen: number,
+    factsFor: (chapter: PlannedChapter) => Promise<string | null>
+): Promise<ChapterOutcome> {
+    // Read the coherence spine fresh — it reflects every accepted chapter so far.
+    const bible = await deps.readBible();
+    const facts = await factsFor(chapter);
+
+    let attempt = 0;
+    let priorIssues: string[] | undefined;
+    let lastGate: GateResult | null = null;
+
+    // attempt 0 = first try; each failure that stays under the bound regenerates.
+    // Total tries = 1 + maxRegen.
+    while (attempt <= maxRegen) {
+        const draft = await deps.generateChapter({
+            chapter,
+            bible,
+            writingMd: deps.writingMd,
+            facts,
+            attempt,
+            priorIssues,
+        });
+        const gate = await deps.verifyChapter(draft, chapter);
+        lastGate = gate;
+
+        if (gate.passed) {
+            const saved: SavedChapter = {
+                index: chapter.index,
+                intent: chapter.intent,
+                content: gate.text,
+                attempts: attempt + 1,
+            };
+            await deps.saveChapter(saved);
+            // Bible is updated ONLY after acceptance — a rejected draft never
+            // contaminates the spine. Pass the pre-update bible for context.
+            await deps.updateBible(saved, bible);
+            // Fail-soft history (never part of control flow).
+            await deps.recordAttempt?.({
+                index: chapter.index,
+                attempt: attempt + 1,
+                status: 'accepted',
+                gateIssues: [],
+            });
+            return {
+                index: chapter.index,
+                intent: chapter.intent,
+                status: 'accepted',
+                attempts: attempt + 1,
+                content: gate.text,
+                issues: [],
+            };
+        }
+
+        // Failed this attempt; record it, feed issues back, and (maybe) regenerate.
+        await deps.recordAttempt?.({
+            index: chapter.index,
+            attempt: attempt + 1,
+            status: 'failed',
+            gateIssues: gate.issues,
+        });
+        priorIssues = gate.issues;
+        attempt += 1;
+    }
+
+    // Exhausted the bound without a pass — a failed outcome. The caller decides
+    // what to do (halt/skip for the loop; a structured non-200 for a targeted regen).
+    return {
+        index: chapter.index,
+        intent: chapter.intent,
+        status: 'failed',
+        attempts: maxRegen + 1,
+        content: lastGate?.text ?? '',
+        issues: lastGate?.issues ?? [],
+    };
+}
+
+/**
+ * Author a SINGLE chapter of an existing plan, by index — the targeted regenerate
+ * path (Wave 4A). Runs the exact same generate → done-gate → regen-on-fail engine
+ * as one iteration of `runChapterLoop` (via the shared `authorChapterOnce`), so a
+ * regenerated chapter clears the identical bar and, on acceptance, is persisted and
+ * folded into the bible the same way. Does NOT touch book-level status or any other
+ * chapter — a targeted regen, not a run.
+ *
+ * Fail-closed: an out-of-plan index is a wiring error (BookAuthorError). On
+ * gate-fail exhaustion it returns a `failed` ChapterOutcome (no save, no bible
+ * fold), leaving the prior accepted chapter intact for the caller to surface.
+ */
+export async function authorSingleChapter(
+    plan: PlannedChapter[],
+    deps: AuthorDeps,
+    index: number,
+    options: AuthorRunOptions = {}
+): Promise<ChapterOutcome> {
+    if (!Array.isArray(plan) || plan.length === 0) {
+        throw new BookAuthorError('authorSingleChapter: plan must be a non-empty array.');
+    }
+    assertDeps(deps);
+
+    const maxRegen = options.maxRegen ?? DEFAULT_MAX_REGEN;
+    if (!Number.isInteger(maxRegen) || maxRegen < 0) {
+        throw new BookAuthorError('authorSingleChapter: maxRegen must be a non-negative integer.');
+    }
+
+    const chapter = plan.find((c) => c.index === index);
+    if (!chapter) {
+        throw new BookAuthorError(`authorSingleChapter: no planned chapter with index ${index}.`);
+    }
+
+    const factsFor = options.facts ?? (async () => null);
+    return authorChapterOnce(chapter, deps, maxRegen, factsFor);
 }
 
 function assertDeps(deps: AuthorDeps): void {
@@ -314,4 +365,4 @@ function assertDeps(deps: AuthorDeps): void {
     }
 }
 
-export default { runChapterLoop, DEFAULT_MAX_REGEN };
+export default { runChapterLoop, authorSingleChapter, DEFAULT_MAX_REGEN };
