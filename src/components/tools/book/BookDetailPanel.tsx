@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Download, BookOpen } from "lucide-react";
+import { setShowLoginModal } from "@/redux/slices/auth";
+import ToolPageShell from "@/components/shared/ToolPageShell";
 import BookRunPanel from "./BookRunPanel";
 import ChapterList from "./ChapterList";
 import StatusBadge from "./StatusBadge";
@@ -19,6 +22,7 @@ import type { Book, Chapter, ByokProvider } from "./types";
  * Mirrors SecondMeProfilePanel's loading/401/error shape.
  */
 export default function BookDetailPanel({ bookId }: { bookId: string }) {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [book, setBook] = useState<Book | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -33,7 +37,7 @@ export default function BookDetailPanel({ bookId }: { bookId: string }) {
     try {
       const res = await fetch(`/api/book/${bookId}`, { credentials: "include" });
       if (res.status === 401) {
-        setStatus({ type: "error", msg: "Please sign in to view this book." });
+        dispatch(setShowLoginModal(true));
         return;
       }
       if (res.status === 404) {
@@ -49,7 +53,7 @@ export default function BookDetailPanel({ bookId }: { bookId: string }) {
     } finally {
       setLoading(false);
     }
-  }, [bookId]);
+  }, [bookId, dispatch]);
 
   useEffect(() => {
     load();
@@ -98,33 +102,10 @@ export default function BookDetailPanel({ bookId }: { bookId: string }) {
     }
   }, [bookId]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground p-4">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Loading book…
-      </div>
-    );
-  }
-
-  if (status) {
-    return (
-      <div className="space-y-3">
-        <Link href="/book" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" />
-          Back to books
-        </Link>
-        <p className="text-sm text-destructive" role="status">
-          {status.msg}
-        </p>
-      </div>
-    );
-  }
-
-  if (!book) return null;
-
   return (
-    <div className="space-y-5">
+    <ToolPageShell maxWidth="7xl" loading={loading} error={status?.msg ?? null}>
+      {book && (
+      <div className="space-y-5">
       <Link href="/book" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Back to books
@@ -182,6 +163,8 @@ export default function BookDetailPanel({ bookId }: { bookId: string }) {
           onRegenerated={reloadChapters}
         />
       </div>
-    </div>
+      </div>
+      )}
+    </ToolPageShell>
   );
 }

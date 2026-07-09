@@ -1,4 +1,5 @@
 import ErrorBoundary from "@/components/common/ErrorBoundary";
+import ToolPageShell from "@/components/shared/ToolPageShell";
 import ResearchContend from "@/components/tools/research/ResearchContend";
 
 export async function generateMetadata() {
@@ -10,11 +11,11 @@ export async function generateMetadata() {
 
 const Research = () => {
   return (
-    <div className="container mx-auto px-4">
+    <ToolPageShell maxWidth="full">
       <ErrorBoundary>
         <ResearchContend />
       </ErrorBoundary>
-    </div>
+    </ToolPageShell>
   );
 };
 

@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
 import { Loader2, BookOpen, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { setShowLoginModal } from "@/redux/slices/auth";
+import ToolPageShell from "@/components/shared/ToolPageShell";
 import CreateBookForm from "./CreateBookForm";
 import StatusBadge from "./StatusBadge";
 import type { Book } from "./types";
@@ -15,6 +18,7 @@ import type { Book } from "./types";
  * loading/error/401 handling.
  */
 export default function BookListPanel() {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState<Book[]>([]);
   const [status, setStatus] = useState<{ type: "error"; msg: string } | null>(null);
@@ -25,7 +29,7 @@ export default function BookListPanel() {
     try {
       const res = await fetch("/api/book", { credentials: "include" });
       if (res.status === 401) {
-        setStatus({ type: "error", msg: "Please sign in to view your books." });
+        dispatch(setShowLoginModal(true));
         return;
       }
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
@@ -36,7 +40,7 @@ export default function BookListPanel() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     load();
@@ -47,7 +51,8 @@ export default function BookListPanel() {
   }, []);
 
   return (
-    <div className="space-y-5">
+    <ToolPageShell maxWidth="7xl">
+      <div className="space-y-5">
       <div className="flex items-center gap-2">
         <BookOpen className="h-4 w-4 text-primary" />
         <span className="text-sm font-medium">Book authoring</span>
@@ -93,6 +98,7 @@ export default function BookListPanel() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </ToolPageShell>
   );
 }

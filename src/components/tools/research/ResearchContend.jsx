@@ -7,7 +7,8 @@ import {
 } from "@/redux/api/tools/toolsApi";
 import * as motion from "motion/react-client";
 import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setShowLoginModal } from "@/redux/slices/auth";
 import FormComponent from "./form-component";
 import RenderPart from "./RenderPart";
 import Suggestion from "./Suggestion";
@@ -18,6 +19,7 @@ const ResearchContend = () => {
   const [selectedModel, setSelectedModel] = useState("shothik-brain-1.0");
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const { accessToken } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [getResearchQuestion] = useGetResearchQuestionMutation();
   const { data: trendingQueries } = useResearchTrendingQuery();
   const [selectedGroup, setSelectedGroup] = useState("web");
@@ -60,8 +62,8 @@ const ResearchContend = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw { message: error.message, error: error.error };
+        const error = await response.json().catch(() => ({}));
+        throw { message: error.message, error: error.error, status: response.status };
       }
 
       const stream = response.body;
@@ -138,7 +140,12 @@ const ResearchContend = () => {
       setIsLoading(false);
       setUserInput("");
     } catch (error) {
-      toast.error(error.message);
+      setIsLoading(false);
+      if (error?.status === 401 || error?.error === "UNAUTHORIZED") {
+        dispatch(setShowLoginModal(true));
+      } else {
+        toast.error(error.message);
+      }
     }
   }
 
