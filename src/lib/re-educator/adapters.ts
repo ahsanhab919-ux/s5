@@ -1,11 +1,12 @@
 /**
- * Re-educator — OpenAI + Anthropic semantic provider adapters (Phase 2 #3).
+ * Re-educator — OpenAI + Anthropic + Gemini semantic provider adapters (Phase 2 #3).
  *
  * Phase 2 #2 defined the `SemanticProvider` contract and the `providerToReviewer`
  * adapter that enforces input scoping + fail-closed output validation. This file
- * implements two REAL providers behind that contract: thin `fetch`-based calls to
- * OpenAI (`/v1/chat/completions`) and Anthropic (`/v1/messages`). No SDK — the
- * repo talks to models via plain HTTP (matches the no-SDK, Letta-handle style).
+ * implements REAL providers behind that contract: thin `fetch`-based calls to
+ * OpenAI (`/v1/chat/completions`), Anthropic (`/v1/messages`), and Gemini
+ * (`/v1beta/models/{model}:generateContent`). No SDK — the repo talks to models via
+ * plain HTTP (matches the no-SDK, Letta-handle style).
  *
  * Design rules (spec §7b#3):
  *   - Structured-JSON output: the model is asked to return a strict JSON object
@@ -44,6 +45,7 @@ export const REQUEST_TIMEOUT_MS = 20_000;
  * (the semantic pass only ever sees a handful of short flagged spans). */
 export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-3-5-haiku-latest';
+export const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
 
 /** One flagged region handed to the model: its span plus the exact snippet. */
 interface SpanSnippet {
@@ -250,6 +252,59 @@ export function anthropicProvider(opts: AdapterOptions): SemanticProvider {
       }
       const content =
         (json as { content?: Array<{ text?: string }> })?.content?.[0]?.text ?? '';
+      return parseIssuesJson(content) as Issue[];
+    },
+  };
+}
+
+/**
+ * Gemini adapter — POST /v1beta/models/{model}:generateContent. The key travels in
+ * the `x-goog-api-key` header (NOT the URL query string, so it never lands in logs).
+ * Fails closed to `[]` on absent key / non-2xx / network / parse error.
+ */
+export function geminiProvider(opts: AdapterOptions): SemanticProvider {
+  const model = opts.model ?? DEFAULT_GEMINI_MODEL;
+  const timeoutMs = opts.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const doFetch = opts.fetchImpl ?? fetch;
+  return {
+    name: 'gemini',
+    async review(input: SemanticProviderInput): Promise<Issue[]> {
+      if (!opts.apiKey) return [];
+      const snippets = toSnippets(input.text, input.spans);
+      if (snippets.length === 0) return [];
+      const prompt = buildPrompt(input, snippets);
+
+      const response = await runFetch(
+        doFetch,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': opts.apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: MAX_OUTPUT_TOKENS,
+              responseMimeType: 'application/json',
+            },
+          }),
+        },
+        timeoutMs,
+      );
+
+      if (!response || !response.ok) return [];
+      let json: unknown;
+      try {
+        json = await response.json();
+      } catch {
+        return [];
+      }
+      const content =
+        (json as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> })
+          ?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
       return parseIssuesJson(content) as Issue[];
     },
   };

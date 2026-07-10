@@ -55,7 +55,7 @@ describe('storeByokKey (validation, before any DB/crypto)', () => {
     });
 
     it('rejects an unknown provider', async () => {
-        await expect(storeByokKey(USER, 'gemini', 'sk-x')).rejects.toThrow(/must be one of/);
+        await expect(storeByokKey(USER, 'cohere', 'sk-x')).rejects.toThrow(/must be one of/);
         expect(mockFindOneAndUpdate).not.toHaveBeenCalled();
     });
 

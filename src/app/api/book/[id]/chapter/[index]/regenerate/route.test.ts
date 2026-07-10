@@ -112,7 +112,7 @@ describe('POST /api/book/[id]/chapter/[index]/regenerate', () => {
 
     it('400 when provider is missing/invalid', async () => {
         (getAuthenticatedUser as any).mockResolvedValue(authed);
-        const res: any = await POST(req({ provider: 'gemini' }), { params: makeParams('0') });
+        const res: any = await POST(req({ provider: 'cohere' }), { params: makeParams('0') });
         expect(res.status).toBe(400);
         expect(res.data.error).toMatch(/provider/i);
     });

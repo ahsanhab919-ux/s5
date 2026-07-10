@@ -93,7 +93,7 @@ describe('DELETE /api/second-me/keys', () => {
 
     it('400 on an invalid provider', async () => {
         (getAuthenticatedUser as any).mockResolvedValue({ _id: 'u1' });
-        const res: any = await DELETE(req({ provider: 'gemini' }));
+        const res: any = await DELETE(req({ provider: 'cohere' }));
         expect(res.status).toBe(400);
     });
 

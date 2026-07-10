@@ -12,6 +12,8 @@
  * assistant does NOT run it.
  *
  * Run:
+ *   GEMINI_API_KEY=... npx tsx scripts/rag-r1a-eval.mts
+ *   # or, for Anthropic:
  *   ANTHROPIC_API_KEY=sk-... npx tsx scripts/rag-r1a-eval.mts
  *   # or, for OpenAI:
  *   OPENAI_API_KEY=sk-... npx tsx scripts/rag-r1a-eval.mts
@@ -26,8 +28,12 @@ import { EVAL_CASES, CLEAN_CASES } from '../src/lib/book/eval/fixtures';
 
 /** Pick a provider + cheap default model from whichever key is present in env. */
 function resolveByok():
-    | { provider: 'anthropic' | 'openai'; apiKey: string; model: string }
+    | { provider: 'anthropic' | 'openai' | 'gemini'; apiKey: string; model: string }
     | undefined {
+    const geminiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
+    if (geminiKey && geminiKey.length > 0) {
+        return { provider: 'gemini', apiKey: geminiKey, model: 'gemini-1.5-flash' };
+    }
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     if (anthropicKey && anthropicKey.length > 0) {
         return { provider: 'anthropic', apiKey: anthropicKey, model: 'claude-3-5-haiku-latest' };
@@ -46,7 +52,7 @@ function resolveByok():
  * Empty text (or an unusable descriptor) yields no issues rather than throwing.
  */
 function byokReviewer(byok: {
-    provider: 'anthropic' | 'openai';
+    provider: 'anthropic' | 'openai' | 'gemini';
     apiKey: string;
     model: string;
 }): SemanticReviewer {
@@ -64,7 +70,9 @@ async function main() {
     const byok = resolveByok();
     if (!byok) {
         console.error(
-            'No API key found. Set one of ANTHROPIC_API_KEY or OPENAI_API_KEY and re-run:\n' +
+            'No API key found. Set one of GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY ' +
+                'and re-run:\n' +
+                '  GEMINI_API_KEY=... npx tsx scripts/rag-r1a-eval.mts\n' +
                 '  ANTHROPIC_API_KEY=sk-... npx tsx scripts/rag-r1a-eval.mts\n' +
                 '  OPENAI_API_KEY=sk-... npx tsx scripts/rag-r1a-eval.mts'
         );

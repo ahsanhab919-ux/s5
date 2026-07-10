@@ -33,12 +33,12 @@ import type { SemanticReviewer } from './engine';
 import type { Span } from './types';
 import type { SemanticProvider, ProviderCaps, SemanticUsage } from './provider';
 import { providerToReviewer } from './provider';
-import { openAiProvider, anthropicProvider } from './adapters';
+import { openAiProvider, anthropicProvider, geminiProvider } from './adapters';
 import type { MeaningVerifier } from './entailment';
 import { openAiVerifier, anthropicVerifier } from './entailment';
 
 /** The provider names a BYOK request may select. Anything else ⇒ no reviewer. */
-export const BYOK_PROVIDERS = ['openai', 'anthropic'] as const;
+export const BYOK_PROVIDERS = ['openai', 'anthropic', 'gemini'] as const;
 export type ByokProviderName = (typeof BYOK_PROVIDERS)[number];
 
 /**
@@ -71,6 +71,8 @@ function buildProvider(name: ByokProviderName, apiKey: string, model?: string): 
       return openAiProvider({ apiKey, model });
     case 'anthropic':
       return anthropicProvider({ apiKey, model });
+    case 'gemini':
+      return geminiProvider({ apiKey, model });
     default: {
       // Exhaustiveness: a new provider added to the union fails to compile here.
       const never: never = name;
@@ -162,6 +164,12 @@ export function verifierFromByok(byok: ByokRequest | undefined): MeaningVerifier
       return openAiVerifier({ apiKey: byok.apiKey, model: byok.model });
     case 'anthropic':
       return anthropicVerifier({ apiKey: byok.apiKey, model: byok.model });
+    case 'gemini':
+      // No Gemini entailment verifier exists yet; the meaning-preservation VERIFY
+      // gate simply stays unavailable for Gemini (fail-closed to undefined ⇒ the
+      // caller proceeds without a semantic verifier). The semantic REVIEW pass
+      // (geminiProvider) is unaffected.
+      return undefined;
     default: {
       const never: never = byok.provider;
       throw new Error(`unknown BYOK provider: ${String(never)}`);

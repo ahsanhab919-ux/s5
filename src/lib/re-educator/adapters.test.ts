@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   openAiProvider,
   anthropicProvider,
+  geminiProvider,
   parseIssuesJson,
   buildPrompt,
   MAX_SPANS,
@@ -9,6 +10,7 @@ import {
   MAX_OUTPUT_TOKENS,
   DEFAULT_OPENAI_MODEL,
   DEFAULT_ANTHROPIC_MODEL,
+  DEFAULT_GEMINI_MODEL,
 } from './adapters';
 import { providerToReviewer } from './provider';
 import type { Span } from './types';
@@ -31,6 +33,26 @@ function anthropicFetch(text: string, ok = true, status = 200): typeof fetch {
     ok,
     status,
     json: async () => ({ content: [{ text }] }),
+  })) as unknown as typeof fetch;
+}
+
+/** Build a fake fetch returning a Gemini-shaped JSON body + status. */
+function geminiFetch(text: string, ok = true, status = 200): typeof fetch {
+  return vi.fn(async () => ({
+    ok,
+    status,
+    json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }),
+  })) as unknown as typeof fetch;
+}
+
+/** A fetch whose json() throws, to exercise the parse fail-closed path. */
+function throwingJsonFetch(ok = true, status = 200): typeof fetch {
+  return vi.fn(async () => ({
+    ok,
+    status,
+    json: async () => {
+      throw new Error('bad json');
+    },
   })) as unknown as typeof fetch;
 }
 
@@ -201,6 +223,62 @@ describe('anthropicProvider', () => {
     await p.review({ text: TEXT, spans: [CANDIDATE] });
     const [, init] = (spy as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(JSON.parse((init as RequestInit).body as string).model).toBe('claude-opus-4');
+  });
+});
+
+describe('geminiProvider', () => {
+  it('returns [] with no API key and never calls fetch', async () => {
+    const spy = geminiFetch(GOOD_JSON);
+    const p = geminiProvider({ apiKey: undefined, fetchImpl: spy });
+    expect(await p.review({ text: TEXT, spans: [CANDIDATE] })).toEqual([]);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('returns [] with no candidate spans and never calls fetch', async () => {
+    const spy = geminiFetch(GOOD_JSON);
+    const p = geminiProvider({ apiKey: 'gm-test', fetchImpl: spy });
+    expect(await p.review({ text: TEXT, spans: [] })).toEqual([]);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('POSTs to the Gemini endpoint with the key in the x-goog-api-key header (not the URL)', async () => {
+    const spy = geminiFetch(GOOD_JSON);
+    const p = geminiProvider({ apiKey: 'gm-test', fetchImpl: spy });
+    await p.review({ text: TEXT, spans: [CANDIDATE] });
+    const [url, init] = (spy as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe(
+      `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_GEMINI_MODEL}:generateContent`,
+    );
+    expect(url).not.toContain('gm-test'); // key must never land in the URL
+    const headers = (init as RequestInit).headers as Record<string, string>;
+    expect(headers['x-goog-api-key']).toBe('gm-test');
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.generationConfig.maxOutputTokens).toBe(MAX_OUTPUT_TOKENS);
+    expect(body.generationConfig.responseMimeType).toBe('application/json');
+    expect(body.contents[0].parts[0].text).toContain('quick brown fox');
+  });
+
+  it('parses issues from the Gemini candidates shape', async () => {
+    const p = geminiProvider({ apiKey: 'gm-test', fetchImpl: geminiFetch(GOOD_JSON) });
+    expect(await p.review({ text: TEXT, spans: [CANDIDATE] })).toHaveLength(1);
+  });
+
+  it('fails closed to [] on a non-2xx response', async () => {
+    const p = geminiProvider({ apiKey: 'gm-test', fetchImpl: geminiFetch('', false, 429) });
+    await expect(p.review({ text: TEXT, spans: [CANDIDATE] })).resolves.toEqual([]);
+  });
+
+  it('fails closed to [] when json() throws', async () => {
+    const p = geminiProvider({ apiKey: 'gm-test', fetchImpl: throwingJsonFetch() });
+    await expect(p.review({ text: TEXT, spans: [CANDIDATE] })).resolves.toEqual([]);
+  });
+
+  it('honours a custom model override in the endpoint URL', async () => {
+    const spy = geminiFetch(GOOD_JSON);
+    const p = geminiProvider({ apiKey: 'gm-test', model: 'gemini-1.5-pro', fetchImpl: spy });
+    await p.review({ text: TEXT, spans: [CANDIDATE] });
+    const [url] = (spy as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toContain('models/gemini-1.5-pro:generateContent');
   });
 });
 

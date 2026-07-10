@@ -109,7 +109,7 @@ describe('POST /api/book/[id]/run', () => {
 
     it('400 when provider is missing/invalid', async () => {
         (getAuthenticatedUser as any).mockResolvedValue(authed);
-        const res: any = await POST(req({ provider: 'gemini' }), { params });
+        const res: any = await POST(req({ provider: 'cohere' }), { params });
         expect(res.status).toBe(400);
         expect(res.data.error).toMatch(/provider/i);
         expect(mockClaim).not.toHaveBeenCalled();

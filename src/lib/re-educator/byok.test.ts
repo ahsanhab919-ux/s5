@@ -20,8 +20,12 @@ describe('isByokProvider', () => {
     for (const p of BYOK_PROVIDERS) expect(isByokProvider(p)).toBe(true);
   });
 
+  it('accepts gemini (registered in Phase R1a)', () => {
+    expect(isByokProvider('gemini')).toBe(true);
+  });
+
   it('rejects anything else', () => {
-    for (const bad of ['gemini', 'OPENAI', '', undefined, null, 42, {}]) {
+    for (const bad of ['google', 'OPENAI', '', undefined, null, 42, {}]) {
       expect(isByokProvider(bad)).toBe(false);
     }
   });
@@ -34,7 +38,7 @@ describe('reviewerFromByok — fail-closed to undefined', () => {
 
   it('returns undefined when the provider is missing or unsupported', () => {
     expect(reviewerFromByok({ apiKey: KEY }, TEXT_LEN)).toBeUndefined();
-    expect(reviewerFromByok({ provider: 'gemini', apiKey: KEY }, TEXT_LEN)).toBeUndefined();
+    expect(reviewerFromByok({ provider: 'google', apiKey: KEY }, TEXT_LEN)).toBeUndefined();
   });
 
   it('returns undefined when the key is missing or empty', () => {
@@ -68,6 +72,11 @@ describe('reviewerFromByok — builds a reviewer for valid descriptors', () => {
       { provider: 'anthropic', apiKey: KEY, model: 'claude-opus-4' },
       TEXT_LEN,
     );
+    expect(typeof reviewer).toBe('function');
+  });
+
+  it('builds a function for a valid Gemini descriptor', () => {
+    const reviewer = reviewerFromByok({ provider: 'gemini', apiKey: KEY }, TEXT_LEN);
     expect(typeof reviewer).toBe('function');
   });
 
