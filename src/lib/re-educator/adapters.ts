@@ -46,6 +46,8 @@ export const REQUEST_TIMEOUT_MS = 20_000;
 export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-3-5-haiku-latest';
 export const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
+export const DEFAULT_OMNIROUTE_MODEL = 'auto';
+export const OMNIROUTE_BASE_URL = 'http://localhost:20128/v1/chat/completions';
 
 /** One flagged region handed to the model: its span plus the exact snippet. */
 interface SpanSnippet {
@@ -150,6 +152,8 @@ export interface AdapterOptions {
   timeoutMs?: number;
   /** Injected for tests: replace the network call. Defaults to global fetch. */
   fetchImpl?: typeof fetch;
+  /** Override the chat-completions endpoint (OpenAI-compatible gateways, e.g. OmniRoute). Defaults to OpenAI. */
+  baseUrl?: string;
 }
 
 /**
@@ -160,6 +164,7 @@ export function openAiProvider(opts: AdapterOptions): SemanticProvider {
   const model = opts.model ?? DEFAULT_OPENAI_MODEL;
   const timeoutMs = opts.timeoutMs ?? REQUEST_TIMEOUT_MS;
   const doFetch = opts.fetchImpl ?? fetch;
+  const url = opts.baseUrl ?? 'https://api.openai.com/v1/chat/completions';
   return {
     name: 'openai',
     async review(input: SemanticProviderInput): Promise<Issue[]> {
@@ -170,7 +175,7 @@ export function openAiProvider(opts: AdapterOptions): SemanticProvider {
 
       const response = await runFetch(
         doFetch,
-        'https://api.openai.com/v1/chat/completions',
+        url,
         {
           method: 'POST',
           headers: {

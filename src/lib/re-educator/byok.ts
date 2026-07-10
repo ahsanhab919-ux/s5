@@ -33,12 +33,18 @@ import type { SemanticReviewer } from './engine';
 import type { Span } from './types';
 import type { SemanticProvider, ProviderCaps, SemanticUsage } from './provider';
 import { providerToReviewer } from './provider';
-import { openAiProvider, anthropicProvider, geminiProvider } from './adapters';
+import {
+  openAiProvider,
+  anthropicProvider,
+  geminiProvider,
+  DEFAULT_OMNIROUTE_MODEL,
+  OMNIROUTE_BASE_URL,
+} from './adapters';
 import type { MeaningVerifier } from './entailment';
 import { openAiVerifier, anthropicVerifier } from './entailment';
 
 /** The provider names a BYOK request may select. Anything else ⇒ no reviewer. */
-export const BYOK_PROVIDERS = ['openai', 'anthropic', 'gemini'] as const;
+export const BYOK_PROVIDERS = ['openai', 'anthropic', 'gemini', 'omniroute'] as const;
 export type ByokProviderName = (typeof BYOK_PROVIDERS)[number];
 
 /**
@@ -73,6 +79,14 @@ function buildProvider(name: ByokProviderName, apiKey: string, model?: string): 
       return anthropicProvider({ apiKey, model });
     case 'gemini':
       return geminiProvider({ apiKey, model });
+    case 'omniroute':
+      // OmniRoute is a local, OpenAI-wire-compatible gateway: reuse the OpenAI
+      // adapter pointed at the local base URL (no new adapter body).
+      return openAiProvider({
+        apiKey,
+        model: model ?? DEFAULT_OMNIROUTE_MODEL,
+        baseUrl: OMNIROUTE_BASE_URL,
+      });
     default: {
       // Exhaustiveness: a new provider added to the union fails to compile here.
       const never: never = name;
@@ -169,6 +183,11 @@ export function verifierFromByok(byok: ByokRequest | undefined): MeaningVerifier
       // gate simply stays unavailable for Gemini (fail-closed to undefined ⇒ the
       // caller proceeds without a semantic verifier). The semantic REVIEW pass
       // (geminiProvider) is unaffected.
+      return undefined;
+    case 'omniroute':
+      // No dedicated OmniRoute entailment verifier; the VERIFY gate stays
+      // unavailable for the gateway (fail-closed to undefined). The semantic
+      // REVIEW pass (OpenAI adapter at the OmniRoute base URL) is unaffected.
       return undefined;
     default: {
       const never: never = byok.provider;

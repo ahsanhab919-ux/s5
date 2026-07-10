@@ -11,6 +11,7 @@ import {
   DEFAULT_OPENAI_MODEL,
   DEFAULT_ANTHROPIC_MODEL,
   DEFAULT_GEMINI_MODEL,
+  OMNIROUTE_BASE_URL,
 } from './adapters';
 import { providerToReviewer } from './provider';
 import type { Span } from './types';
@@ -279,6 +280,32 @@ describe('geminiProvider', () => {
     await p.review({ text: TEXT, spans: [CANDIDATE] });
     const [url] = (spy as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toContain('models/gemini-1.5-pro:generateContent');
+  });
+});
+
+describe('openAiProvider baseUrl override (OmniRoute-compatible gateways)', () => {
+  it('POSTs to the injected baseUrl (OmniRoute) instead of OpenAI', async () => {
+    const spy = openAiFetch(GOOD_JSON);
+    const p = openAiProvider({
+      apiKey: 'sk-omni',
+      baseUrl: OMNIROUTE_BASE_URL,
+      fetchImpl: spy,
+    });
+    const out = await p.review({ text: TEXT, spans: [CANDIDATE] });
+    expect(out).toHaveLength(1);
+    const [url, init] = (spy as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe(OMNIROUTE_BASE_URL);
+    // Wire format is unchanged: still Bearer auth + OpenAI chat-completions body.
+    const headers = (init as RequestInit).headers as Record<string, string>;
+    expect(headers.Authorization).toBe('Bearer sk-omni');
+  });
+
+  it('defaults to the OpenAI endpoint when baseUrl is omitted (back-compat)', async () => {
+    const spy = openAiFetch(GOOD_JSON);
+    const p = openAiProvider({ apiKey: 'sk-test', fetchImpl: spy });
+    await p.review({ text: TEXT, spans: [CANDIDATE] });
+    const [url] = (spy as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe('https://api.openai.com/v1/chat/completions');
   });
 });
 

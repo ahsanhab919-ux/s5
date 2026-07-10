@@ -24,6 +24,10 @@ describe('isByokProvider', () => {
     expect(isByokProvider('gemini')).toBe(true);
   });
 
+  it('accepts omniroute (local OpenAI-compatible gateway)', () => {
+    expect(isByokProvider('omniroute')).toBe(true);
+  });
+
   it('rejects anything else', () => {
     for (const bad of ['google', 'OPENAI', '', undefined, null, 42, {}]) {
       expect(isByokProvider(bad)).toBe(false);
@@ -77,6 +81,11 @@ describe('reviewerFromByok — builds a reviewer for valid descriptors', () => {
 
   it('builds a function for a valid Gemini descriptor', () => {
     const reviewer = reviewerFromByok({ provider: 'gemini', apiKey: KEY }, TEXT_LEN);
+    expect(typeof reviewer).toBe('function');
+  });
+
+  it('builds a function for a valid OmniRoute descriptor', () => {
+    const reviewer = reviewerFromByok({ provider: 'omniroute', apiKey: KEY, model: undefined }, TEXT_LEN);
     expect(typeof reviewer).toBe('function');
   });
 
