@@ -18,6 +18,7 @@
  * one place that imports the Re-educator service, and is itself injected.
  */
 import { runReEducator, type GuardOptions } from '@/lib/re-educator/service';
+import type { SemanticReviewer } from '@/lib/re-educator/engine';
 import type { Span } from '@/lib/re-educator/types';
 import type { GateResult, PlannedChapter } from './author';
 
@@ -28,6 +29,12 @@ export interface ReEducatorGateOptions {
     guardOptions?: GuardOptions;
     /** WRITING.md version tag for the ledger meta. */
     writingMdVersion?: string;
+    /**
+     * Optional semantic reviewer. When provided, the gate runs meaning-level
+     * review in addition to the deterministic guards. OFF by default (Phase R1a):
+     * omitting it preserves the exact prior style/mechanics-only behaviour.
+     */
+    semanticReview?: SemanticReviewer;
 }
 
 /** Turn a Review outcome into a flat list of human-readable blocking issues. */
@@ -61,6 +68,7 @@ export function buildReEducatorGate(
             anchors: options.anchors ?? [],
             guardOptions: options.guardOptions,
             writingMdVersion: options.writingMdVersion ?? 'none',
+            semanticReview: options.semanticReview,
         });
 
         // review mode always returns a ReviewResult; narrow for type-safety.
