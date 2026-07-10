@@ -58,7 +58,47 @@ npx vitest run src/lib/book/eval
 
 ## RESULTS
 
-**(pending live run)** — TBD.
+**Baseline (run against the real `buildReEducatorGate()`, default config):**
 
-No baseline number has been recorded yet. Run the snippet above against the real gate and
-paste the generated table here.
+**Overall drift-catch rate: 0.0% (0/16 known errors caught).**
+
+| Kind | Caught | Total | Catch rate |
+| --- | ---: | ---: | ---: |
+| non-fiction | 0 | 8 | 0.0% |
+| fiction | 0 | 8 | 0.0% |
+| **overall** | 0 | 16 | 0.0% |
+
+Every one of the 16 labelled drift/fabrication errors passed the gate uncaught.
+
+### Why it is 0% — architectural, not a bug
+
+The result is not noise; it follows directly from how the gate is wired. `buildReEducatorGate`
+calls `runReEducator({ mode: 'review' })` **without a `semanticReview` provider and without a
+`meaningVerifier`**. In that configuration the Review path runs only the **deterministic guards**
+(`defaultGuards`): `readability`, `links`, `pii`, and — only when the caller supplies their data —
+`terminology` and `voice-drift`. None of these guards make a model call, and none of them reason
+about meaning, continuity, or facts:
+
+- `readability` — sentence length / passive voice.
+- `links` — malformed URL **structure** only (explicitly no network, no dead-link check).
+- `pii` — emails / PII patterns.
+- `terminology` / `voice-drift` — only registered when rules / a voice profile are passed (not here).
+
+So the current done-gate is a **style/mechanics gate, not a faithfulness gate.** It structurally
+*cannot* catch an eye-colour flip, a resurrected dead character, an invented citation, or a
+fabricated statistic — those require either (a) the story bible / prior chapters as evidence
+(retrieval grounding), or (b) an enabled semantic/meaning verifier. The gate never receives
+`priorContext`, and even if it did, no active guard would use it.
+
+### Implication for the RAG-grounding plan
+
+- The R0 exit gate is cleared with maximum headroom: **catch rate is 0%, so any grounding that
+  catches even a few of these errors is a strict improvement** on a measured baseline.
+- The finding also refines *where* the fix belongs: grounding must feed a component that actually
+  reasons about meaning. Two levers exist — enable the **`semanticReview` / `meaningVerifier`**
+  path that already exists in `runReEducator`, and/or inject **retrieved bible/prior-chapter facts**
+  as the evidence that path (or a new contradiction guard) checks against. R1 should do both:
+  retrieval supplies the evidence; a meaning-aware verifier consumes it.
+
+*(Regenerate anytime with `npx tsx scripts/rag-baseline.mts` — deterministic, no tokens, since the
+default gate makes no model calls.)*
