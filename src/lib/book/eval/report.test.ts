@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-import { formatBaselineMarkdown } from './report';
+import { formatBaselineMarkdown, formatTwoSidedMarkdown } from './report';
+import type { TwoSidedReport } from './harness';
 import type { BaselineReport } from './types';
 
 const report: BaselineReport = {
@@ -42,5 +43,49 @@ describe('formatBaselineMarkdown', () => {
     it('marks caught cases with ✅ and missed cases with ❌', () => {
         expect(md).toContain('| fic-b | fiction | timeline | ❌ |');
         expect(md).toContain('| nf-a | nonfiction | fabrication | ✅ |');
+    });
+});
+
+const twoSided: TwoSidedReport = {
+    errorTotal: 2,
+    caught: 1,
+    recall: 0.5,
+    cleanTotal: 2,
+    falsePositives: 1,
+    falsePositiveRate: 0.5,
+    precision: 0.5,
+    perError: [
+        { id: 'err-nf', kind: 'nonfiction', expectedErrorType: 'fabrication', caught: true, issues: ['i'] },
+        { id: 'err-fic', kind: 'fiction', expectedErrorType: 'continuity', caught: false, issues: [] },
+    ],
+    perClean: [
+        { id: 'ok-nf', kind: 'nonfiction', wronglyRejected: false, issues: [] },
+        { id: 'ok-fic', kind: 'fiction', wronglyRejected: true, issues: ['i'] },
+    ],
+};
+
+describe('formatTwoSidedMarkdown', () => {
+    const md = formatTwoSidedMarkdown(twoSided);
+
+    it('renders recall, false-positive rate, and precision', () => {
+        expect(md).toContain('Recall: 50.0%');
+        expect(md).toContain('False-positive rate: 50.0%');
+        expect(md).toContain('Precision: 50.0%');
+        expect(md).toContain('(1/2 known errors caught)');
+        expect(md).toContain('(1/2 clean drafts wrongly rejected)');
+    });
+
+    it('lists every error and clean case id', () => {
+        for (const c of twoSided.perError) {
+            expect(md).toContain(c.id);
+        }
+        for (const c of twoSided.perClean) {
+            expect(md).toContain(c.id);
+        }
+    });
+
+    it('marks a wrongly-rejected clean case with ❌ and an accepted one with ✅', () => {
+        expect(md).toContain('| ok-fic | fiction | ❌ |');
+        expect(md).toContain('| ok-nf | nonfiction | ✅ |');
     });
 });

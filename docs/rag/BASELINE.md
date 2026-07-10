@@ -102,3 +102,45 @@ fabricated statistic — those require either (a) the story bible / prior chapte
 
 *(Regenerate anytime with `npx tsx scripts/rag-baseline.mts` — deterministic, no tokens, since the
 default gate makes no model calls.)*
+
+## R0.5 — probes (what they DID and DID NOT show)
+
+Two throwaway probes were run after the baseline. Recording them honestly, including a
+correction, because a misleading number must not sit in the repo docs as if it were evidence.
+
+### Probe 1 — negative control (TRUSTWORTHY)
+
+Three clean, error-free drafts were run through the real `buildReEducatorGate()`. All three were
+**accepted** (`passed=true`, zero issues). This confirms the 0/16 baseline means the gate is
+**blind to drift**, not that the gate/harness rejects everything. This result stands.
+
+### Probe 2 — semantic-routing probe (RESULT CORRECTED)
+
+A second probe re-ran the 16 error fixtures while injecting a **fake deterministic
+`semanticReview`** that flags *every* draft with a `major` `unsupported-assertion`. It reported
+"16/16 caught".
+
+**That 16/16 does NOT mean a semantic reviewer catches drift, and the earlier framing of it as
+"the free lever works (0 → 16/16)" is retracted.** The fake reviewer fires on *all* input, so it
+would also have "caught" the three clean drafts — a 100% catch rate paired with a 100%
+false-positive rate. What the probe actually establishes is narrower and purely structural:
+
+- **When a semantic issue reaches `authorRequired`, the gate rejects the draft.** i.e. the
+  routing/plumbing from `semanticReview` → blocking outcome → `passed=false` is wired correctly.
+
+It says **nothing** about how well a *real* reviewer distinguishes drifted from clean text. Drift
+**catch rate remains unmeasured.** The true metric requires (a) a real reviewer and (b) an eval set
+that contains clean cases too, scored on **precision / false-positive rate**, not one-sided catch
+rate.
+
+### Corrected conclusion & sequence
+
+- The 0% baseline is a **wiring gap** (no `semanticReview` is passed through `buildReEducatorGate`),
+  not a routing gap. The seam exists in `engine.ts` / `review.ts` / `service.ts`.
+- Before any feature code: **make the eval two-sided** — add clean/negative fixtures and report
+  precision + recall + false-positive rate. An eval that can only go up is not an eval.
+- **R1a** (expose the `semanticReview` option through `buildReEducatorGate`) is held until that
+  two-sided metric exists to hold a real reviewer against.
+- **Zvec/retrieval earns its place only later**, against the *residual* misses a real reviewer
+  cannot close without evidence (e.g. a Ch1 eye-colour fact) — and only if false positives stay
+  controlled.

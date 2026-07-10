@@ -46,6 +46,21 @@ export interface EvalCase {
     expectedError: ExpectedError;
 }
 
+/**
+ * A clean, error-FREE case the gate SHOULD accept. The negative control that makes
+ * the eval two-sided: without these, a detector that rejects everything would score
+ * a perfect drift-catch rate. A clean draft that is rejected is a FALSE POSITIVE.
+ */
+export interface CleanCase {
+    id: string;
+    kind: EvalKind;
+    chapter: PlannedChapter;
+    /** A short, coherent draft with no continuity/fabrication/timeline/contradiction error. */
+    draft: string;
+    /** Human note: why this draft is clean (expected to pass the gate). */
+    note: string;
+}
+
 /** Aggregate stats for one kind (or overall). */
 export interface CatchStat {
     total: number;

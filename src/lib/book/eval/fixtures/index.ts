@@ -11,6 +11,7 @@ import { FICTION_CASES } from './fiction';
 
 export { NONFICTION_CASES } from './nonfiction';
 export { FICTION_CASES } from './fiction';
+export { CLEAN_CASES } from './clean';
 
 /** All eval cases, non-fiction first then fiction. */
 export const EVAL_CASES: EvalCase[] = [...NONFICTION_CASES, ...FICTION_CASES];
